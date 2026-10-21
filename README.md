@@ -1,6 +1,6 @@
 # Laminar
 
-**Status: Specification phase (v0.1.0).** The API and crate structure are defined; implementations are planned for v0.2.0 onwards. See `ROADMAP.md` for milestones.
+**Status: Specification phase (v0.0.1).** The API and crate structure are defined; implementations are planned for v0.2.0 onwards. See `ROADMAP.md` for milestones.
 
 Laminar is a high-performance Rust suite for the generation, filtering, and analysis of honeycomb layered materials using the JAM framework.
 

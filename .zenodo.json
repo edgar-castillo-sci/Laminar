@@ -1,6 +1,6 @@
 {
   "title": "Laminar: A high-performance Rust suite for JAM layered materials",
-  "description": "Specification and architectural design for Laminar, a Rust workspace for the generation, filtering, and analysis of honeycomb layered materials. This v0.1.0 release defines the crate structure, API stubs for canonical filtering (canonJAMr) and canonical augmentation (caugJAMr), and the roadmap for future implementation.",
+  "description": "Specification and architectural design for Laminar, a Rust workspace for the generation, filtering, and analysis of honeycomb layered materials. This v0.0.1 release defines the crate structure, API stubs for canonical filtering (canonJAMr) and canonical augmentation (caugJAMr), and the roadmap for future implementation.",
   "creators": [
     {
       "name": "Castillo, Edgar",
@@ -9,7 +9,7 @@
       "type": "Author"
     }
   ],
-  "version": "0.1.0",
+  "version": "0.0.1",
   "access_right": "open",
   "upload_type": "software",
   "license": "MIT",
