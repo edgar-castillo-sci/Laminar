@@ -1,0 +1,27 @@
+cd ~/Labs/Laminar
+cat > .zenodo.json << 'EOF'
+{
+  "title": "Laminar: A high-performance Rust suite for JAM layered materials",
+  "description": "Specification and architectural design for Laminar, a Rust workspace for the generation, filtering, and analysis of honeycomb layered materials. Includes API stubs for canonical filtering (canonJAMr) and canonical augmentation (caugJAMr).",
+  "creators": [
+    {
+      "name": "Castillo, Edgar",
+      "orcid": "0009-0006-4268-3323",
+      "affiliation": "Independent Researcher",
+      "type": "Author"
+    }
+  ],
+  "version": "0.1.0",
+  "access_right": "open",
+  "upload_type": "software",
+  "license": "MIT",
+  "language": "eng",
+  "keywords": [
+    "Rust",
+    "JAM",
+    "materials science",
+    "canonical augmentation",
+    "high-performance computing"
+  ]
+}
+EOF
