@@ -4,14 +4,14 @@ version = 4
 
 [[package]]
 name = "canonjamr"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "jam-core",
 ]
 
 [[package]]
 name = "caugjamr"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "canonjamr",
  "jam-core",
@@ -19,4 +19,13 @@ dependencies = [
 
 [[package]]
 name = "jam-core"
-version = "0.1.0"
+version = "0.0.1"
+
+[[package]]
+name = "laminar-cli"
+version = "0.0.1"
+dependencies = [
+ "canonjamr",
+ "caugjamr",
+ "jam-core",
+]
