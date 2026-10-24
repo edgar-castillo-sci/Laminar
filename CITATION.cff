@@ -7,7 +7,8 @@ authors:
     affiliation: "Independent Researcher"
 title: "Laminar: A high-performance Rust suite for JAM layered materials"
 version: 0.0.1
-date-released: 2026-01-01
+doi: 10.5281/zenodo.23628779
+date-released: 2026-10-24
 license: "MIT OR Apache-2.0"
 repository-code: "https://github.com/edgar-castillo-sci/Laminar"
 keywords:
