@@ -4,6 +4,8 @@ members = [
     "crates/jam-core",
     "crates/canonjamr",
     "crates/caugjamr",
+    "crates/laminar-cli",
+    # "crates/laminar-py",  # enable in v0.5.0 (requires Python + PyO3)
 ]
 
 [workspace.package]

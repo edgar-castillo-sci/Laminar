@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Castillo
+    given-names: Edgar
+    orcid: "https://orcid.org/0009-0006-4268-3323"
+    affiliation: "Independent Researcher"
+title: "Laminar: A high-performance Rust suite for JAM layered materials"
+version: 0.0.1
+date-released: 2026-01-01
+license: "MIT OR Apache-2.0"
+repository-code: "https://github.com/edgar-castillo-sci/Laminar"
+keywords:
+  - JAM
+  - canonicalization
+  - canonical augmentation
+  - symmetry
+  - 2D materials
+  - honeycomb
+  - Rust
+  - algorithmic complexity
+references:
+  - type: software
+    title: "canonJAM: Canonicalization of JAM strings for duplicate detection"
+    authors:
+      - family-names: Castillo
+        given-names: Edgar
+    version: 1.1.0
+    doi: 10.5281/zenodo.23471387
+    year: 2026

@@ -1,0 +1,15 @@
+[package]
+name = "laminar-py"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "laminar"
+crate-type = ["cdylib"]
+
+[dependencies]
+jam-core = { path = "../jam-core" }
+canonjamr = { path = "../canonjamr" }
+caugjamr = { path = "../caugjamr" }
+pyo3 = { version = "0.22", features = ["extension-module"] }
