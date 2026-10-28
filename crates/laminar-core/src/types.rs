@@ -174,6 +174,25 @@ impl JamChain {
     pub fn rows(&self) -> &[[Token; 3]] {
         &self.rows
     }
+
+    /// Devuelve las 3 columnas como k-tuples de tokens.
+    ///
+    /// Las columnas se comparan lexicográficamente para la canonicalización
+    /// (columna-major, Definition 6 de *Orbits as Multisets*).
+    pub fn cols(&self) -> [Vec<Token>; 3] {
+        let k = self.k();
+        let mut cols: [Vec<Token>; 3] = [
+            Vec::with_capacity(k),
+            Vec::with_capacity(k),
+            Vec::with_capacity(k),
+        ];
+        for row in self.rows() {
+            cols[0].push(row[0].clone());
+            cols[1].push(row[1].clone());
+            cols[2].push(row[2].clone());
+        }
+        cols
+    }
 }
 
 impl fmt::Display for JamChain {
