@@ -6,9 +6,9 @@ license.workspace = true
 description = "Core types and algorithms for JAM chains"
 
 [features]
-default = ["canon", "cells"]
+default = ["canon", "cells", "children"]
 canon = []
-children = []
+children = ["canon"]  # children needs kappa_fast
 cells = []
 
 [dependencies]
