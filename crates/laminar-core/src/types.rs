@@ -80,6 +80,10 @@ impl JamOption {
 }
 
 /// The four combinatorial cells of *Stacking as Words*.
+///
+/// Mixed case is intentional: uppercase = "yes", lowercase = "no".
+/// `PP` = palindromic + periodic, `Pp` = non-palindromic + periodic,
+/// `pP` = palindromic + non-periodic, `Ap` = neither.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Cell {
@@ -136,6 +140,18 @@ impl JamChain {
             rows: Arc::from(rows.into_boxed_slice()),
             option,
         })
+    }
+
+    /// Construct a chain directly from rows (bypasses parse + validation).
+    ///
+    /// **For internal use and tests only.** The caller is responsible for
+    /// ensuring the rows are valid for the option. Use `parse` for
+    /// user-facing input.
+    pub fn from_rows(rows: Vec<[Token; 3]>, option: JamOption) -> Self {
+        Self {
+            rows: Arc::from(rows.into_boxed_slice()),
+            option,
+        }
     }
 
     pub fn option(&self) -> JamOption {
@@ -236,6 +252,65 @@ fn parse_buckled(inner: &str) -> Result<(String, String), ParseError> {
 
 fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), ParseError> {
     match option {
+        // PL (1): all distinct permutations of [+0, +j, +j].
+        //   Row = 1×Empty + 2×Up, both Up with the SAME letter.
+        JamOption::PL => {
+            let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
+            let ups: Vec<&String> = row
+                .iter()
+                .filter_map(|t| match t {
+                    Token::Up(x) => Some(x),
+                    _ => None,
+                })
+                .collect();
+            if empties != 1 || ups.len() != 2 {
+                return Err(ParseError::InvalidRowForOption {
+                    row: idx,
+                    option,
+                    expected: "1×Empty, 2×Up(same letter)",
+                    got: describe_row(row),
+                });
+            }
+            if ups[0] != ups[1] {
+                return Err(ParseError::MismatchedLetters {
+                    row: idx,
+                    option,
+                    first: ups[0].clone(),
+                    second: ups[1].clone(),
+                });
+            }
+            Ok(())
+        }
+        // BU (3): all distinct permutations of [+0, +j, -j].
+        //   Row = 1×Empty + 1×Up + 1×Down, Up and Down with the SAME letter.
+        JamOption::BU => {
+            let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
+            let up = row.iter().find_map(|t| match t {
+                Token::Up(x) => Some(x),
+                _ => None,
+            });
+            let down = row.iter().find_map(|t| match t {
+                Token::Down(x) => Some(x),
+                _ => None,
+            });
+            match (empties, up, down) {
+                (1, Some(u), Some(d)) if u == d => Ok(()),
+                (1, Some(u), Some(d)) => Err(ParseError::MismatchedLetters {
+                    row: idx,
+                    option,
+                    first: u.clone(),
+                    second: d.clone(),
+                }),
+                _ => Err(ParseError::InvalidRowForOption {
+                    row: idx,
+                    option,
+                    expected: "1×Empty, 1×Up, 1×Down(same letter)",
+                    got: describe_row(row),
+                }),
+            }
+        }
+        // OneH (5): all distinct permutations of [+0, +j, (+k-k)].
+        //   Row = 1×Empty + 1×Up + 1×Buckled, Buckled.up == Buckled.down.
         JamOption::OneH => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
             let ups = row.iter().filter(|t| matches!(t, Token::Up(_))).count();
@@ -248,7 +323,7 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
                     row: idx,
                     option,
                     expected: "1×Empty, 1×Up, 1×Buckled",
-                    got: (empties, ups, buckleds),
+                    got: describe_row(row),
                 });
             }
             for t in row {
@@ -268,6 +343,25 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
     }
 }
 
+/// Human-readable summary of a row's token counts, for error messages.
+fn describe_row(row: &[Token; 3]) -> String {
+    let mut e = 0;
+    let mut u = 0;
+    let mut d = 0;
+    let mut f = 0;
+    let mut b = 0;
+    for t in row {
+        match t {
+            Token::Empty => e += 1,
+            Token::Up(_) => u += 1,
+            Token::Down(_) => d += 1,
+            Token::Fixed(_) => f += 1,
+            Token::Buckled { .. } => b += 1,
+        }
+    }
+    format!("E={}, U={}, D={}, F={}, B={}", e, u, d, f, b)
+}
+
 // ---------------------------------------------------------------------------
 // Errors
 // ---------------------------------------------------------------------------
@@ -281,7 +375,18 @@ pub enum ParseError {
     InvalidBuckled(String),
     InvalidRowLength(usize),
     Row { row: usize, source: Box<ParseError> },
-    InvalidRowForOption { row: usize, option: JamOption, expected: &'static str, got: (usize, usize, usize) },
+    InvalidRowForOption {
+        row: usize,
+        option: JamOption,
+        expected: &'static str,
+        got: String,
+    },
+    MismatchedLetters {
+        row: usize,
+        option: JamOption,
+        first: String,
+        second: String,
+    },
     JanusTokenInOneH { row: usize, up: String, down: String },
     UnsupportedOption(JamOption),
 }
@@ -298,8 +403,13 @@ impl fmt::Display for ParseError {
             ParseError::Row { row, source } => write!(f, "row {}: {}", row, source),
             ParseError::InvalidRowForOption { row, option, expected, got } => write!(
                 f,
-                "row {}: invalid for option {:?} (expected {}, got {:?})",
+                "row {}: invalid for option {:?} (expected {}, got {})",
                 row, option, expected, got
+            ),
+            ParseError::MismatchedLetters { row, option, first, second } => write!(
+                f,
+                "row {}: letters must match in option {:?} (got '{}' and '{}')",
+                row, option, first, second
             ),
             ParseError::JanusTokenInOneH { row, up, down } => write!(
                 f,
@@ -315,6 +425,7 @@ impl fmt::Display for ParseError {
 
 impl std::error::Error for ParseError {}
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -329,7 +440,10 @@ mod tests {
     #[test]
     fn parse_rejects_janus_token_in_oneh() {
         let err = JamChain::parse("+j+0(+k-l)/+j+0(+k-l)", JamOption::OneH).unwrap_err();
-        assert!(matches!(err, ParseError::Row { .. } | ParseError::JanusTokenInOneH { .. }));
+        assert!(matches!(
+            err,
+            ParseError::Row { .. } | ParseError::JanusTokenInOneH { .. }
+        ));
     }
 
     #[test]
@@ -341,9 +455,80 @@ mod tests {
     #[test]
     fn token_order_matches_paper() {
         // Paper: Fixed ≺ Buckled ≺ Empty ≺ Up ≺ Down
-        assert!(Token::Fixed("j".into()) < Token::Buckled { up: "k".into(), down: "k".into() });
+        assert!(
+            Token::Fixed("j".into())
+                < Token::Buckled { up: "k".into(), down: "k".into() }
+        );
         assert!(Token::Buckled { up: "k".into(), down: "k".into() } < Token::Empty);
         assert!(Token::Empty < Token::Up("j".into()));
         assert!(Token::Up("j".into()) < Token::Down("j".into()));
+    }
+
+    #[test]
+    fn parse_pl_rows() {
+        for s in ["+0+j+j", "+j+0+j", "+j+j+0"] {
+            let chain = JamChain::parse(s, JamOption::PL).unwrap();
+            assert_eq!(chain.k(), 1);
+            assert_eq!(chain.raw(), s);
+        }
+    }
+
+    #[test]
+    fn parse_pl_rejects_mismatched_letters() {
+        let err = JamChain::parse("+j+0+k", JamOption::PL).unwrap_err();
+        // `validate_row` errors are NOT wrapped in Row; they carry their own
+        // `row` field to avoid "row N: row N: ..." in Display.
+        assert!(
+            matches!(err, ParseError::MismatchedLetters { .. }),
+            "expected MismatchedLetters, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_pl_rejects_down_token() {
+        let err = JamChain::parse("+j+0-j", JamOption::PL).unwrap_err();
+        // Down is not allowed in PL; row has 1U + 1D + 1E instead of 2U + 1E.
+        assert!(
+            matches!(err, ParseError::InvalidRowForOption { .. }),
+            "expected InvalidRowForOption, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_bu_rows() {
+        for s in ["+0+j-j", "+j+0-j", "+j-j+0", "-j+0+j"] {
+            let chain = JamChain::parse(s, JamOption::BU).unwrap();
+            assert_eq!(chain.k(), 1);
+        }
+    }
+
+    #[test]
+    fn parse_bu_rejects_mismatched_letters() {
+        let err = JamChain::parse("+j+0-k", JamOption::BU).unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::Row { .. } | ParseError::MismatchedLetters { .. }
+        ));
+    }
+
+    #[test]
+    fn parse_oneh_rows() {
+        for s in ["+0+j(+k-k)", "+j+0(+k-k)", "(+k-k)+j+0"] {
+            let chain = JamChain::parse(s, JamOption::OneH).unwrap();
+            assert_eq!(chain.k(), 1);
+        }
+    }
+
+    #[test]
+    fn from_rows_constructs_chain() {
+        let rows = vec![
+            [Token::Up("j".into()), Token::Empty, Token::Up("j".into())],
+            [Token::Empty, Token::Up("j".into()), Token::Up("j".into())],
+        ];
+        let chain = JamChain::from_rows(rows, JamOption::PL);
+        assert_eq!(chain.k(), 2);
+        assert_eq!(chain.raw(), "+j+0+j/+0+j+j");
     }
 }

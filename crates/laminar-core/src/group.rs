@@ -1,6 +1,9 @@
 //! G = S3 × Z/2, order 12.
 
-use crate::types::{JamChain, JamOption, Stabilizer, Token};
+use crate::types::{JamChain, Stabilizer, Token};
+
+#[cfg(test)]
+use crate::types::JamOption;
 
 /// A permutation of {0, 1, 2}, representing a column permutation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -69,21 +72,18 @@ impl Group {
 
         if g.v {
             if chain.option().v_is_planar() {
-                // v = flip: reverse layer order, no content change.
                 rows.reverse();
             } else {
-                // v = sign∘flip: reverse + flip sign / exchange buckled pair.
                 rows.reverse();
                 for row in &mut rows {
                     for token in row {
-                        *token = flip_token(token.clone(), chain.option());
+                        *token = flip_token(token.clone());
                     }
                 }
             }
         }
 
-        JamChain::parse(&rows_to_string(&rows), chain.option())
-            .expect("Group::apply produced an invalid chain")
+        JamChain::from_rows(rows, chain.option())
     }
 
     /// The orbit of a chain under G (12 elements, with duplicates removed).
@@ -107,7 +107,7 @@ impl Group {
                 continue;
             }
             let c = Self::apply(g, chain);
-            if c.raw() == chain.raw() {
+            if c.rows() == chain.rows() {
                 gens.push(g);
             }
         }
@@ -120,7 +120,8 @@ impl Group {
     }
 }
 
-fn flip_token(token: Token, option: JamOption) -> Token {
+/// Flip the sign of a token under v = sign∘flip (buckled-type options).
+fn flip_token(token: Token) -> Token {
     match token {
         Token::Up(x) => Token::Down(x),
         Token::Down(x) => Token::Up(x),
@@ -128,28 +129,7 @@ fn flip_token(token: Token, option: JamOption) -> Token {
         Token::Buckled { up, down } => Token::Buckled { up: down, down: up },
         Token::Empty => Token::Empty,
     }
-    .tap(|_| {
-        // For buckled options, (+x -y) maps to (-x +y); the swap above
-        // implements the exchange. For planar options this branch is
-        // unreachable because v_is_planar() is checked before calling.
-        let _ = option;
-    })
 }
-
-fn rows_to_string(rows: &[[Token; 3]]) -> String {
-    rows.iter()
-        .map(|row| row.iter().map(|t| t.to_jam()).collect::<String>())
-        .collect::<Vec<_>>()
-        .join("/")
-}
-
-trait Tap: Sized {
-    fn tap<F: FnOnce(&Self)>(self, f: F) -> Self {
-        f(&self);
-        self
-    }
-}
-impl<T> Tap for T {}
 
 #[cfg(test)]
 mod tests {
@@ -162,14 +142,15 @@ mod tests {
 
     #[test]
     fn identity_fixes_chain() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", Option::OneH).unwrap();
+        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
         let c2 = Group::apply(GroupElement::IDENTITY, &chain);
         assert_eq!(chain.raw(), c2.raw());
     }
 
     #[test]
     fn flip_reverses_layers() {
-        let chain = JamChain::parse("+j+0(+k-k)/+k+j(+k-k)", Option::OneH).unwrap();
+        // Both rows valid for OneH (1×Empty, 1×Up, 1×Buckled).
+        let chain = JamChain::parse("+j+0(+k-k)/+0+j(+k-k)", JamOption::OneH).unwrap();
         let flipped = Group::apply(
             GroupElement {
                 sigma: Perm3::IDENTITY,
@@ -177,6 +158,6 @@ mod tests {
             },
             &chain,
         );
-        assert_eq!(flipped.raw(), "+k+j(+k-k)/+j+0(+k-k)");
+        assert_eq!(flipped.raw(), "+0+j(+k-k)/+j+0(+k-k)");
     }
 }

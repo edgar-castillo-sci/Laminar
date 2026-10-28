@@ -4,9 +4,8 @@ use crate::types::{Cell, JamChain};
 
 /// Compute the cell of a chain.
 ///
-/// **Skeleton implementation:** only implements `Ap` (no palindrome, no period)
-/// and `PP` (palindrome). The full classification (Pp, pP) requires the
-/// period computation, which is Fase 1.
+/// **Skeleton implementation:** only distinguishes palindrome vs not,
+/// and period-1 vs not. The full period computation (any d | k) is Fase 1A.3.
 pub fn cell(chain: &JamChain) -> Cell {
     let pal = is_palindromic(chain);
     let per = is_periodic(chain);
@@ -27,7 +26,7 @@ pub fn is_palindromic(chain: &JamChain) -> bool {
 /// Whether the chain is periodic (w = u^m for some m >= 2).
 ///
 /// **Skeleton implementation:** only checks period 1 (all rows identical).
-/// Full period computation is Fase 1.
+/// Full period computation is Fase 1A.3.
 pub fn is_periodic(chain: &JamChain) -> bool {
     let rows = chain.rows();
     if rows.len() < 2 {
@@ -52,7 +51,7 @@ mod tests {
 
     #[test]
     fn mos2_bilayer_is_pp() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", Option::OneH).unwrap();
+        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
         assert!(is_palindromic(&chain));
         assert!(is_periodic(&chain));
         assert_eq!(cell(&chain), Cell::PP);
