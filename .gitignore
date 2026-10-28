@@ -2,3 +2,5 @@
 **/*.rs.bk
 /target
 **/*.rs.bk
+out/
+experiments/results/
