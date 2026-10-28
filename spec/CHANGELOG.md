@@ -20,6 +20,10 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 - `scripts/skeleton.sh` — one-shot build + run + external validation.
 - `Token` now implements `Ord` via an explicit `rank()`, per
   Definition 6 of *Orbits as Multisets*.
+- kappa_literal and kappa_fast now compare column-major (Definition 6
+  of *Orbits as Multisets*). Previously row-major; equivalent for k=2
+  but diverges for k>=3. No public API change.
+- kappa_fast implements Theorem 3: min(sort_cols(a), sort_cols(v(a))).
 
 ### Changed
 - **BREAKING:** renamed `laminar_core::Option` → `laminar_core::JamOption`
