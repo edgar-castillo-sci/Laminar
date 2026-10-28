@@ -2,13 +2,105 @@
 
 All notable changes to Laminar are documented here.
 
-The project is in **alpha** (0.1.0-alpha.N). The strict semver policy
+The project is in **alpha** (`0.1.0-alpha.N`). The strict semver policy
 of `spec/v0.1.0-alpha.1.md` §0 applies from `0.2.0-beta.1` onwards.
 During alpha, public-type changes bump the alpha tag (e.g.,
 `0.1.0-alpha.1` → `0.1.0-alpha.2`) and are recorded here with a
 `**BREAKING**` marker.
 
+---
+
+## v0.1.0-alpha.3 — in development (Fase 1A)
+
+Tracking the parser + canonicalization + cell classifier for
+options PL (1), BU (3), OneH (5).
+
+### Fase 1A.3 — Word-based cells with S3-palindromic predicate
+
+**Fixed**
+- `cell_word` / `cell` now use **S3-palindromic** (∃σ ∈ S3 with
+  σ(w) = w^rev), not strict-palindrome. This is the `pa` predicate
+  of *Stacking as Words* (Definition 3). The previous strict-palindrome
+  was under-counting PP and over-counting Pp/pP for k ≥ 3.
+- `cell_nonemptiness_pattern` test: fixed k=2 expectations
+  (pP(2) is nonempty, `[0,1]`; Ap(2) is empty, all length-2 words are S3-pal).
+
+**Added**
+- Public word-level API in `cells.rs`:
+  - `word(chain) -> Vec<u8>` (column index of `+0` per row; panics for options 6 and 8, see D7)
+  - `is_palindromic_word(w) -> bool` (strict, Ramsdell H)
+  - `is_s3_palindromic_word(w) -> bool` (Definition 3, the `pa` predicate)
+  - `period_word(w) -> Option<usize>`
+  - `is_periodic_word(w) -> bool`
+  - `cell_word(w) -> Cell`
+- Chain-level wrappers: `is_s3_palindromic(chain)` (new), alongside
+  existing `is_palindromic`, `period`, `is_periodic`, `cell`.
+- Test `cell_nonemptiness_pattern`: exhaustive over all `3^k` words
+  for k ∈ {2, 3, 4, 5, 6, 8} (7650 words), verifies Paper 2 Theorem 2.
+- 8 tests in `cells.rs`.
+
+**Open**
+- **D7:** Options 6 (1T) and 8 (Janus1T) have no `+0` token in their
+  rows, so `word()` panics. The Paper 2 rule ("use `*x` if present,
+  else `+0`") still yields no distinguished token for 1T. Resolution
+  deferred to Fase 1B.
+
+### Fase 1A.2 — `kappa_fast` real (Theorem 3) + column-major fix
+
+**Fixed**
+- `kappa_literal` and `kappa_fast` now compare **column-major**
+  (Definition 6 of *Orbits as Multisets*), not row-major. Equivalent
+  for k=2 (both orders give the same minimum), divergent for k ≥ 3.
+  This is the ordering used by `canonJAM`; the previous row-major
+  would have failed bit-parity at k ≥ 3.
+
+**Added**
+- `JamChain::cols() -> [Vec<Token>; 3]`: the three columns as k-tuples.
+- `kappa_fast` implements Theorem 3: `min(sort_cols(a), sort_cols(v(a)))`.
+  Two evaluations of `sort_cols`, one comparison, no enumeration of
+  the 12 group elements. O(k) with constant 2.
+- 3 new tests in `canon.rs`:
+  - `literal_and_fast_agree_on_mos2_bilayer_full` (exhaustive, OneH k=2, 36 chains)
+  - `literal_and_fast_agree_pl_k3` (exhaustive, PL k=3, 27 chains)
+  - `literal_and_fast_agree_random` (PL/BU/OneH at k ∈ {6,8,10,12}, N=100 each)
+- `rand = 0.8` as a `[dev-dependencies]` in `laminar-core`.
+
+### Fase 1A.1 — Parser for PL, BU, OneH
+
+**Added**
+- `validate_row` handles PL (2×Up same letter), BU (Up+Down same
+  letter), OneH (Empty + Up + Buckled with `up == down`).
+- `ParseError::MismatchedLetters { row, option, first, second }` for
+  PL/BU letter mismatches (e.g., `+j+0+k` in PL).
+- `JamChain::from_rows(rows, option)` constructor for internal use
+  (bypasses `parse` + validation; caller is responsible for validity).
+- `describe_row(row) -> String` helper, produces `E=n, U=n, ...` for
+  error messages.
+- 7 new tests in `types.rs`: `parse_pl_rows`,
+  `parse_pl_rejects_mismatched_letters`, `parse_pl_rejects_down_token`,
+  `parse_bu_rows`, `parse_bu_rejects_mismatched_letters`,
+  `parse_oneh_rows`, `from_rows_constructs_chain`.
+
+**Changed**
+- `ParseError::InvalidRowForOption.got`: `(usize, usize, usize)` →
+  `String` (produced by `describe_row`).
+- Convention: `parse_row` errors are wrapped in `Row { row, source }`;
+  `validate_row` errors are returned **directly** with their own `row`
+  field. This avoids `row N: row N: ...` in Display.
+
+### Infrastructure
+
+- `scripts/check.sh`: one-shot `fmt --check` + `build` + `test` +
+  `skeleton.sh`, exits 0 only if all pass. First diagnostic when
+  `cargo test` "does nothing" is `cargo test --no-run` (compiles tests
+  without running them; `cargo build` does not).
+
+---
+
 ## v0.1.0-alpha.2 — 2026-10-28 — Fase 0.5 complete
+
+Walking skeleton for MoS₂ 1H bilayer, 5-crate workspace, and fixes for
+the four bugs found during validation.
 
 ### Added
 - `crates/laminar-io/` with `ReferenceCell`, `SiteOccupancy` (via `Token`),
@@ -18,18 +110,14 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 - `crates/skeleton/` — walking skeleton for MoS₂ 1H bilayer.
 - `crates/skeleton/tests/e2e.rs` — end-to-end test.
 - `scripts/skeleton.sh` — one-shot build + run + external validation.
-- `Token` now implements `Ord` via an explicit `rank()`, per
-  Definition 6 of *Orbits as Multisets*.
-- kappa_literal and kappa_fast now compare column-major (Definition 6
-  of *Orbits as Multisets*). Previously row-major; equivalent for k=2
-  but diverges for k>=3. No public API change.
-- kappa_fast implements Theorem 3: min(sort_cols(a), sort_cols(v(a))).
+- `Token` implements `Ord` via an explicit `rank()`, per Definition 6
+  of *Orbits as Multisets*.
 
 ### Changed
 - **BREAKING:** renamed `laminar_core::Option` → `laminar_core::JamOption`
   to avoid shadowing `std::option::Option` from the prelude. All internal
   uses updated (types, group, canon, cells, skeleton, e2e test).
-- `kappa_literal` now compares by `a.rows().cmp(b.rows())` (`Token::Ord`),
+- `kappa_literal` compares by `a.rows().cmp(b.rows())` (`Token::Ord`),
   not by `a.raw().cmp(b.raw())` (ASCII string order).
 - `to_cif` signature: third argument (`space_group`) is now `_space_group`
   (ignored in v0.1.0). The CIF always uses `P 1` for explicit atoms.
@@ -50,16 +138,11 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 - **Bug 3:** `enum Cell` variant `pP` triggered `non_camel_case_types`.
   **Fix:** `#[allow(non_camel_case_types)]` with a comment explaining the
   mixed-case encoding (uppercase = yes, lowercase = no).
+- **Bug 4:** `Option` shadowing in `partial_cmp` return type.
+  **Fix:** resolved by rename to `JamOption` (see Changed).
 
 ### Removed
 - Old crates `jam-core`, `canonjamr`, `caugjamr` (merged into `laminar-core`).
-
-### Open
-- **D3:** Export full space group or only P6₃/mmc / P6̄m2?
-  Deadline: end of Fase 1.5.
-- **D6:** Whether to keep `JamOption` or rename to something shorter in a
-  future version. **Decision:** keep `JamOption`; the shadowing cost of
-  `Option` is higher than the naming cost of `JamOption`.
 
 ---
 
@@ -71,3 +154,12 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 - MCMC spec with Independent Sampler fallback.
 - `JamChain` as a lightweight value type (no cached metadata).
 - Time budget: 18–20 weeks.
+
+### Open at this snapshot
+- **D1:** Venue for Paper 4 (JOSS vs SoftwareX). Deadline: end of Fase 5.
+- **D2:** `--augment-mode strict` in v0.2.0? Deadline: end of Fase 6.
+- **D3:** Full space group or only P6₃/mmc / P6̄m2? Deadline: end of Fase 1.5.
+- **D4:** `laminar-markov` without `laminar-io`? Deadline: end of Fase 4.
+- **D5:** `to_ase()` via PyO3 or pure Python on `to_cif()`? Deadline: end of Fase 4.
+- **D6:** Keep `JamOption` or rename. **Resolved:** keep `JamOption`.
+- **D7:** Word projection for options 6 and 8 (no `+0` token).
