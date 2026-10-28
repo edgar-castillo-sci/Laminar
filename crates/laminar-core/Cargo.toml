@@ -1,0 +1,15 @@
+[package]
+name = "laminar-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core types and algorithms for JAM chains"
+
+[features]
+default = ["canon", "cells"]
+canon = []
+children = []
+cells = []
+
+[dependencies]
+smallvec = "1.13"

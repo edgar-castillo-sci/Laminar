@@ -1,0 +1,11 @@
+[package]
+name = "laminar-io"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Export formats for JAM chains (CIF, POSCAR, XYZ, TSV)"
+
+[dependencies]
+laminar-core.workspace = true
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"

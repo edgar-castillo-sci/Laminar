@@ -1,0 +1,10 @@
+[package]
+name = "laminar-markov"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "MCMC sampling over JAM orbits (Fase 6)"
+
+[dependencies]
+laminar-core.workspace = true
+rand = "0.8"

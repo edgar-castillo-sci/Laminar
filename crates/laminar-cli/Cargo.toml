@@ -3,12 +3,14 @@ name = "laminar-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Laminar CLI: sandwich, compare, sample, modules"
 
 [[bin]]
 name = "laminar"
 path = "src/main.rs"
 
 [dependencies]
-jam-core = { path = "../jam-core" }
-canonjamr = { path = "../canonjamr" }
-caugjamr = { path = "../caugjamr" }
+laminar-core.workspace = true
+laminar-io.workspace = true
+laminar-markov.workspace = true
+clap = { version = "4", features = ["derive"] }

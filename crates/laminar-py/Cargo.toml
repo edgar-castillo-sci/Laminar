@@ -1,15 +1,15 @@
 [package]
-name = "laminar-py"
+name = "laminar-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+description = "Core types and algorithms for JAM chains"
 
-[lib]
-name = "laminar"
-crate-type = ["cdylib"]
+[features]
+default = ["canon", "cells"]
+canon = []
+children = []
+cells = []
 
 [dependencies]
-jam-core = { path = "../jam-core" }
-canonjamr = { path = "../canonjamr" }
-caugjamr = { path = "../caugjamr" }
-pyo3 = { version = "0.22", features = ["extension-module"] }
+smallvec = "1.13"
