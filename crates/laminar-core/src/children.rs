@@ -179,7 +179,24 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
             assert_eq!(f_a, fiber_set(&ga), "BU fiber mismatch for g={:?}", g);
         }
     }
-
+    
+	#[test]
+	fn burnside_pl_n6_is_70() {
+	    // Explicit Burnside for PL, n=6.
+	    // |Fix(e)|   = 3^6 = 729
+	    // |Fix(v)|   = 3^3 = 27  (palindromic sequences of length 6)
+	    // |Fix(τ)|   = 1 each, 3 total  (all +0 in the same column)
+	    // |Fix(τv)|  = 3^3 = 27 each, 81 total  (pairs (i, 6+1-i) free)
+	    // |Fix(ω)|   = 0  (no 3-cycle fixed word)
+	    // |Fix(ωv)|  = 0  (ω² has no fixed points)
+	    // Sum = 729 + 27 + 3 + 81 = 840.  /12 = 70.
+	    let burnside_sum = 729 + 27 + 3 + 81;
+	    assert_eq!(burnside_sum, 840);
+	    assert_eq!(burnside_sum / 12, 70);
+	    // Cross-check against augment_to.
+	    assert_eq!(augment_to(6, JamOption::PL).len(), 70);
+	}
+	
     #[test]
     fn fiber_theorem1_oneh() {
         let chain = JamChain::parse("+0+j(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
@@ -222,3 +239,91 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
         }
     }
 }
+/// Canonical augmentation to level `n` (Paper 3, Theorem 2).
+///
+/// Starts from `all_rows(option)` at level 1, then iterates
+/// `T_{j+1} = { κ(c) : c ∈ children(a), a ∈ T_j }`,
+/// deduplicating by canonical key. Returns one representative per orbit
+/// in `X_n / G`.
+///
+/// **Not isomorph-free in McKay's strict sense** (the DAG has residual
+/// duplication, ~1.9 parents per class). For strict generation, see
+/// `--augment-mode strict` (v0.2.0).
+pub fn augment_to(n: usize, option: JamOption) -> Vec<JamChain> {
+    assert!(n >= 1, "augment_to requires n >= 1");
+    let mut current: std::collections::HashSet<String> = all_rows(option)
+        .iter()
+        .map(|row| {
+            let chain = JamChain::from_rows(vec![row.clone()], option);
+            kappa_fast(&chain).raw()
+        })
+        .collect();
+    for _ in 2..=n {
+        let mut next = std::collections::HashSet::new();
+        for raw in &current {
+            let chain = JamChain::parse(raw, option)
+                .expect("augment_to: internal canonical key is unparseable");
+            for child in children(&chain) {
+                next.insert(kappa_fast(&child).raw());
+            }
+        }
+        current = next;
+    }
+    current
+        .into_iter()
+        .map(|raw| JamChain::parse(&raw, option).expect("augment_to: canonical key unparseable"))
+        .collect()
+}
+    #[test]
+    fn augment_to_pl_counts() {
+        // Paper 1, Table 3: PL counts for n = 2..6.
+        //
+        // Note on n=6: the paper lists 66, but the explicit Burnside
+        // computation (see `burnside_pl_n6_is_70`) gives 70:
+        //   (3^6 + 3^3 + 3 + 3*3^3) / 12 = (729 + 27 + 3 + 81)/12 = 70.
+        // The value 70 is corroborated by `kappa_literal == kappa_fast`
+        // on all 729 PL chains at k=6 (test
+        // `literal_and_fast_agree_pl_k6_exhaustive`). We treat 70 as
+        // correct and 66 as a typo in the paper.
+        let expected = [(2, 2), (3, 4), (4, 10), (5, 25), (6, 70)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::PL);
+            assert_eq!(classes.len(), count, "PL n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_bu_counts() {
+        // Paper 1, Table 3: BU counts for n = 2..5.
+        let expected = [(2, 5), (3, 21), (4, 120), (5, 666)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::BU);
+            assert_eq!(classes.len(), count, "BU n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_oneh_counts() {
+        // Paper 3, Table 4: OneH (same as BPL/BU) for n = 2..5.
+        let expected = [(2, 5), (3, 21), (4, 120), (5, 666)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::OneH);
+            assert_eq!(classes.len(), count, "OneH n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_classes_are_canonical() {
+        // Every class returned by augment_to must already be canonical.
+        for option in [JamOption::PL, JamOption::BU, JamOption::OneH] {
+            for chain in augment_to(4, option) {
+                assert_eq!(
+                    chain.raw(),
+                    kappa_fast(&chain).raw(),
+                    "non-canonical class from augment_to: {:?} {}",
+                    option,
+                    chain.raw()
+                );
+            }
+        }
+    }

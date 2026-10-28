@@ -9,7 +9,23 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 `**BREAKING**` marker.
 
 ---
+### Fase 1A.4 — children + fiber (Paper 3, Theorem 1)
 
+**Added**
+- `children.rs` (module under feature `children`):
+  - `all_rows(option) -> Vec<[Token; 3]>`: PL (3 rows), BU (6), OneH (6).
+  - `prepend(row, chain)`, `append(row, chain)`.
+  - `children(chain) -> Vec<JamChain>`: 2q chains (q prepends + q appends).
+  - `fiber(chain) -> Vec<JamChain>`: canonical children, deduplicated.
+- Public re-exports in `lib.rs`.
+- Feature `children` enabled by default; `children = ["canon"]`.
+- 7 tests in `children.rs`, including `fiber_theorem1_random` (2160 fiber
+  comparisons across PL/BU/OneH, k ∈ {2,3,4}, all 12 g ∈ G).
+
+**Validated**
+- Theorem 1 of *Growing as Pruning* (fiber G-invariance) holds empirically
+  for all tested chains and options.
+  
 ## v0.1.0-alpha.3 — in development (Fase 1A)
 
 Tracking the parser + canonicalization + cell classifier for

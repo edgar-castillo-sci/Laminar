@@ -120,7 +120,51 @@ mod tests {
             }
         }
     }
-
+    
+	#[test]
+	fn literal_and_fast_agree_pl_k6_exhaustive() {
+	    // PL has q=3 rows per layer → 3^6 = 729 chains at k=6.
+	    // Exhaustive: every chain must give the same canonical form under
+	    // kappa_literal and kappa_fast.
+	    let rows = [
+	        [Token::Empty, Token::Up("j".into()), Token::Up("j".into())],
+	        [Token::Up("j".into()), Token::Empty, Token::Up("j".into())],
+	        [Token::Up("j".into()), Token::Up("j".into()), Token::Empty],
+	    ];
+	    let mut checked = 0;
+	    for i0 in 0..3 {
+	        for i1 in 0..3 {
+	            for i2 in 0..3 {
+	                for i3 in 0..3 {
+	                    for i4 in 0..3 {
+	                        for i5 in 0..3 {
+	                            let chain = JamChain::from_rows(
+	                                vec![
+	                                    rows[i0].clone(),
+	                                    rows[i1].clone(),
+	                                    rows[i2].clone(),
+	                                    rows[i3].clone(),
+	                                    rows[i4].clone(),
+	                                    rows[i5].clone(),
+	                                ],
+	                                JamOption::PL,
+	                            );
+	                            assert_eq!(
+	                                kappa_literal(&chain).raw(),
+	                                kappa_fast(&chain).raw(),
+	                                "literal vs fast mismatch for PL k=6, chain={}",
+	                                chain.raw()
+	                            );
+	                            checked += 1;
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	    }
+	    assert_eq!(checked, 729);
+	}
+	
     #[test]
     fn literal_and_fast_agree_pl_k3() {
         // PL: each row is a permutation of [+0, +j, +j] (3 per row) → 3³ = 27.
