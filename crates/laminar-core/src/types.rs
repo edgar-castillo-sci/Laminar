@@ -33,7 +33,6 @@ impl Token {
 
     /// Canonical rank, per Definition 6 of *Orbits as Multisets*:
     /// Fixed (0) < Buckled (1) < Empty (2) < Up (3) < Down (4).
-    /// Letters compared lexicographically within each variant.
     pub(crate) fn rank(&self) -> (u8, &str, &str) {
         match self {
             Token::Fixed(x) => (0, x.as_str(), ""),
@@ -62,9 +61,6 @@ impl Ord for Token {
 // ---------------------------------------------------------------------------
 
 /// One of the eight canonical JAM options.
-///
-/// Named `JamOption` (not `Option`) to avoid shadowing
-/// `std::option::Option` from the prelude.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum JamOption {
     PL,
@@ -91,7 +87,7 @@ impl JamOption {
 }
 
 // ---------------------------------------------------------------------------
-// Cell, Stabilizer
+// Cell
 // ---------------------------------------------------------------------------
 
 /// The four combinatorial cells of *Stacking as Words*.
@@ -106,6 +102,10 @@ pub enum Cell {
     Ap,
 }
 
+// ---------------------------------------------------------------------------
+// Stabilizer (with P1 fix)
+// ---------------------------------------------------------------------------
+
 /// Stabilizer of a chain under G. |G| = 12, so |Stab| divides 12.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Stabilizer {
@@ -116,15 +116,17 @@ pub enum Stabilizer {
 }
 
 impl Stabilizer {
+    /// Size of the stabilizer.
+    ///
+    /// **P1 fix (Fase 6.1):** for `Other(gens)`, the size is `1 + gens.len()`
+    /// (identity + non-identity elements). Previously returned a
+    /// placeholder `4`, which was wrong for |Stab| ∈ {6, 12}.
     pub fn size(&self) -> usize {
         match self {
             Stabilizer::Trivial => 1,
             Stabilizer::Z2 => 2,
             Stabilizer::Z3 => 3,
-            Stabilizer::Other(gens) => {
-                let _ = gens;
-                4
-            }
+            Stabilizer::Other(gens) => 1 + gens.len(),
         }
     }
 }
@@ -159,11 +161,6 @@ impl JamChain {
         })
     }
 
-    /// Construct a chain directly from rows (bypasses parse + validation).
-    ///
-    /// **For internal use and tests only.** The caller is responsible for
-    /// ensuring the rows are valid for the option. Use `parse` for
-    /// user-facing input.
     pub fn from_rows(rows: Vec<[Token; 3]>, option: JamOption) -> Self {
         Self {
             rows: Arc::from(rows.into_boxed_slice()),
@@ -192,10 +189,7 @@ impl JamChain {
         &self.rows
     }
 
-    /// The three columns as k-tuples of tokens.
-    ///
-    /// Columns are compared lexicographically for canonicalization
-    /// (column-major, Definition 6 of *Orbits as Multisets*).
+    /// The three columns as k-tuples of tokens (column-major).
     pub fn cols(&self) -> [Vec<Token>; 3] {
         let k = self.k();
         let mut cols: [Vec<Token>; 3] = [
@@ -403,7 +397,6 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
             }
         }
         // OneH (5): 1×Empty + 1×Fixed(metal) + 1×Buckled(up==down).
-        //   Per Tabla 7 of *Orbits as Multisets*: [+0, *j, (+k-k)].
         JamOption::OneH => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
             let fixeds = row.iter().filter(|t| matches!(t, Token::Fixed(_))).count();
@@ -462,7 +455,7 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
             }
             Ok(())
         }
-        // Janus1H (7): 1×Empty + 1×Fixed(metal) + 1×Buckled(Janus, up!=down).
+        // Janus1H (7): 1×Empty + 1×Fixed(metal) + 1×Buckled(Janus).
         JamOption::Janus1H => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
             let fixeds = row.iter().filter(|t| matches!(t, Token::Fixed(_))).count();
@@ -615,9 +608,7 @@ impl fmt::Display for ParseError {
                 "row {}: Janus token (+{}-{}) not allowed in option 1H",
                 row, up, down
             ),
-            ParseError::UnsupportedOption(o) => {
-                write!(f, "option {:?} not implemented", o)
-            }
+            ParseError::UnsupportedOption(o) => write!(f, "option {:?} not implemented", o),
         }
     }
 }
@@ -631,12 +622,12 @@ impl std::error::Error for ParseError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::group::Group;
 
     // ---------- Fase 1A: PL, BU, OneH ----------
 
     #[test]
     fn parse_mos2_bilayer() {
-        // OneH uses *j (Fixed) for the metal, per Tabla 7.
         let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         assert_eq!(chain.k(), 2);
         assert_eq!(chain.raw(), "*j+0(+k-k)/*j+0(+k-k)");
@@ -659,7 +650,6 @@ mod tests {
 
     #[test]
     fn token_order_matches_paper() {
-        // Paper: Fixed ≺ Buckled ≺ Empty ≺ Up ≺ Down
         assert!(
             Token::Fixed("j".into())
                 < Token::Buckled {
@@ -725,7 +715,6 @@ mod tests {
 
     #[test]
     fn parse_oneh_rows() {
-        // OneH: [+0, *j, (+k-k)] (Tabla 7).
         for s in ["+0*j(+k-k)", "*j+0(+k-k)", "(+k-k)*j+0"] {
             let chain = JamChain::parse(s, JamOption::OneH).unwrap();
             assert_eq!(chain.k(), 1);
@@ -734,7 +723,6 @@ mod tests {
 
     #[test]
     fn parse_oneh_rejects_plus_j_metal() {
-        // Option 5 uses *j (Fixed), not +j (Up).
         let err = JamChain::parse("+j+0(+k-k)", JamOption::OneH).unwrap_err();
         assert!(
             matches!(err, ParseError::InvalidRowForOption { .. }),
@@ -770,11 +758,7 @@ mod tests {
     #[test]
     fn parse_bpl_rejects_same_letters() {
         let err = JamChain::parse("+0+j+j", JamOption::BPL).unwrap_err();
-        assert!(
-            matches!(err, ParseError::MismatchedLetters { .. }),
-            "expected MismatchedLetters, got {:?}",
-            err
-        );
+        assert!(matches!(err, ParseError::MismatchedLetters { .. }));
     }
 
     #[test]
@@ -797,11 +781,7 @@ mod tests {
     #[test]
     fn parse_bbu_rejects_same_letters() {
         let err = JamChain::parse("+0+j-j", JamOption::BBU).unwrap_err();
-        assert!(
-            matches!(err, ParseError::MismatchedLetters { .. }),
-            "expected MismatchedLetters, got {:?}",
-            err
-        );
+        assert!(matches!(err, ParseError::MismatchedLetters { .. }));
     }
 
     #[test]
@@ -880,5 +860,39 @@ mod tests {
             "expected MismatchedLetters, got {:?}",
             err
         );
+    }
+
+    // ---------- Fase 6.1: Stabilizer::size() fix (P1) ----------
+
+    #[test]
+    fn stabilizer_size_matches_direct_count() {
+        // Verify that Stabilizer::size() matches a direct count of fixing
+        // elements for a range of chains. Regression test for P1.
+        let cases = [
+            ("+0+j+j", JamOption::PL),
+            ("+j+0+j", JamOption::PL),
+            ("+0+j-j", JamOption::BU),
+            ("*j+0(+k-k)", JamOption::OneH),
+            ("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH),
+            ("+0+j+j/+j+0+j", JamOption::PL),
+            ("+0+j+j/+0+j+j", JamOption::PL),
+        ];
+        for (s, opt) in cases {
+            let chain = JamChain::parse(s, opt).unwrap();
+            let stab = Group::stabilizer(&chain);
+            let direct = Group::elements()
+                .iter()
+                .filter(|g| Group::apply(**g, &chain).rows() == chain.rows())
+                .count();
+            assert_eq!(
+                stab.size(),
+                direct,
+                "stabilizer size mismatch for {} (option {:?}): reported {}, direct {}",
+                s,
+                opt,
+                stab.size(),
+                direct
+            );
+        }
     }
 }
