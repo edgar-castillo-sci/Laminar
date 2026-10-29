@@ -11,9 +11,48 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 ---
 
 
----
-
 ## v0.1.0-alpha.5 — in development (Fase 2)
+
+### Fase 5 — pymatgen external validation
+
+**Added**
+- `experiments/validate_vs_pymatgen.py`: for each (option, n), generate
+  canonical chains, export to CIF, parse with pymatgen, verify
+  stoichiometry, and group with `StructureMatcher`.
+- `docs/pymatgen_validation.md`: methodology + results.
+
+**Validated**
+- 12/12 cases (all 8 options at n=2; PL/BU/OneH/Janus1H at n=3).
+- Parseability: 100%.
+- Stoichiometry: 100%.
+- No over-counting: `pymatgen groups <= Laminar classes` in every case.
+
+**Open**
+- **D9:** CIF lacks `_symmetry_equiv_pos_as_xyz`. pymatgen warns but
+  parses correctly. Fix: add `_symmetry_equiv_pos_as_xyz` loop with
+  `x, y, z` for `P 1`. Deferred to v0.2.0 (cosmetic; no test breakage).
+
+### Fase 4 — Python bindings (PyO3 + maturin)
+
+### Fase 4 — Python bindings (PyO3 + maturin)
+
+**Added**
+- `crates/laminar-py/` activated in workspace, feature `python` gated.
+- `src/bindings.rs`: `PyJamChain`, `PyReferenceCell`, `sandwich()`,
+  `compare()`, `modules()`, `version()`.
+- `pyproject.toml` for `maturin develop`.
+- `python/tests/test_laminar.py`: 17 tests (version, modules, sandwich,
+  compare, JamChain, ReferenceCell, to_cif).
+- `examples/python_quickstart.py`.
+- `README.md`: usage + API reference.
+
+**Notes**
+- PyO3 0.22 uses the `Bound<'py, T>` API: `import_bound`, `PyDict::new_bound`.
+- Python 3.14 requires `PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1` with PyO3 0.22
+  (max supported is 3.13). Proper fix (bump to pyo3 0.25) deferred to v0.2.0.
+- Cell for k=1: pP (palindromic, not periodic). Documented in test.
+
+### Fase 3 — modules + Laminar.conf
 
 ### Fase 3 — modules + Laminar.conf
 
