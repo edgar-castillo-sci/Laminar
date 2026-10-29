@@ -12,6 +12,7 @@ use laminar_io::cif::to_cif;
 use laminar_io::ReferenceCell;
 
 use crate::common::{metadata, Metadata};
+use crate::config::Config;
 
 #[derive(Args, Debug)]
 pub struct SandwichArgs {
@@ -68,18 +69,31 @@ struct SandwichOutput {
     metadata: Metadata,
 }
 
-pub fn run(args: SandwichArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(
+    args: SandwichArgs,
+    cfg: &Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     if args.list_options {
         print_options();
         return Ok(());
     }
 
-    let option_str = args
+    // Resolve option: CLI > config > error.
+    let option_str_owned = args
         .option
+        .as_deref()
+        .or(cfg.defaults.option.as_deref())
+        .map(|s| s.to_string());
+    let option_str = option_str_owned
         .as_deref()
         .ok_or("--option is required (use --list-options to see available options)")?;
     let option = parse_option(option_str)?;
-    let n = args.layers.ok_or("--layers is required")?;
+
+    // Resolve layers: CLI > config > error.
+    let n = args
+        .layers
+        .or(cfg.defaults.layers)
+        .ok_or("--layers is required")?;
     if n == 0 {
         return Err("--layers must be >= 1".into());
     }
@@ -107,9 +121,13 @@ pub fn run(args: SandwichArgs) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    // Generation mode.
-    let export = args
+    // Generation mode: resolve export format (CLI > config > error).
+    let export_owned = args
         .export
+        .as_deref()
+        .or(cfg.defaults.export_format.as_deref())
+        .map(|s| s.to_string());
+    let export = export_owned
         .as_deref()
         .ok_or("--export is required (use -e stdout to print, or -q to count)")?;
 
@@ -141,8 +159,10 @@ pub fn run(args: SandwichArgs) -> Result<(), Box<dyn std::error::Error>> {
             let output = args
                 .output
                 .as_ref()
-                .ok_or("--output is required for -e jam")?;
-            fs::create_dir_all(output)?;
+                .or(cfg.defaults.output.as_ref())
+                .ok_or("--output is required for -e jam")?
+                .clone();
+            fs::create_dir_all(&output)?;
             let path = output.join(format!("n{}_{}.jam", n, opt_str));
             let content: Vec<String> = chains.iter().map(|c| c.raw()).collect();
             fs::write(&path, content.join("\n"))?;
@@ -168,13 +188,17 @@ pub fn run(args: SandwichArgs) -> Result<(), Box<dyn std::error::Error>> {
             let output = args
                 .output
                 .as_ref()
-                .ok_or("--output is required for -e cif")?;
+                .or(cfg.defaults.output.as_ref())
+                .ok_or("--output is required for -e cif")?
+                .clone();
             let cell_path = args
                 .reference_cell
                 .as_ref()
-                .ok_or("--reference-cell is required for -e cif")?;
-            let cell = ReferenceCell::from_toml(cell_path)?;
-            fs::create_dir_all(output)?;
+                .or(cfg.defaults.reference_cell.as_ref())
+                .ok_or("--reference-cell is required for -e cif")?
+                .clone();
+            let cell = ReferenceCell::from_toml(&cell_path)?;
+            fs::create_dir_all(&output)?;
             let mut written = Vec::new();
             for (i, c) in chains.iter().enumerate() {
                 let cif = to_cif(c, &cell, "P 1")?;

@@ -2,6 +2,8 @@
 
 use assert_cmd::Command;
 
+// ---------- Fase 2b: core behavior ----------
+
 #[test]
 fn compare_equivalent_two_chains() {
     // Two OneH chains that are equivalent (same canonical).
@@ -59,15 +61,11 @@ fn compare_from_files() {
 fn compare_infers_option() {
     // No --option: infer PL from the chains.
     let mut cmd = Command::cargo_bin("laminar").unwrap();
-    cmd.args([
-        "compare",
-        "+0+j+j",
-        "+j+0+j",
-    ])
-    .assert()
-    .success()
-    .stdout(predicates::str::contains("option=PL"))
-    .stdout(predicates::str::contains("equivalent: true"));
+    cmd.args(["compare", "+0+j+j", "+j+0+j"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("option=PL"))
+        .stdout(predicates::str::contains("equivalent: true"));
 }
 
 #[test]
@@ -108,6 +106,8 @@ fn compare_empty_fails() {
         .stderr(predicates::str::contains("no chains to compare"));
 }
 
+// ---------- Fase 2c: JSON + quiet ----------
+
 #[test]
 fn compare_json() {
     let mut cmd = Command::cargo_bin("laminar").unwrap();
@@ -137,8 +137,14 @@ fn compare_quiet_equivalent() {
 #[test]
 fn compare_quiet_not_equivalent_exit_1() {
     let mut cmd = Command::cargo_bin("laminar").unwrap();
-    cmd.args(["compare", "+0+j+j/+j+0+j", "+0+j+j/+0+j+j", "--option", "PL", "-q"])
-        .assert()
-        .code(1)
-        .stdout("false\n");
+    cmd.args([
+        "compare",
+        "+0+j+j/+j+0+j",
+        "+0+j+j/+0+j+j",
+        "--option", "PL",
+        "-q",
+    ])
+    .assert()
+    .code(1)
+    .stdout("false\n");
 }

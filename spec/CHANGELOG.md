@@ -15,6 +15,28 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ## v0.1.0-alpha.5 — in development (Fase 2)
 
+### Fase 3 — modules + Laminar.conf
+
+**Added**
+- `laminar modules [--json]`: list available symmetry modules, notation
+  modules, and export formats.
+- `crates/laminar-cli/src/config.rs`: TOML config with hierarchy
+  CLI > env (`LAMINAR_*`) > `./.laminar.conf` > `~/.config/laminar/laminar.conf`
+  > built-in defaults.
+- `--no-config` global flag to ignore config files.
+- `examples/laminar.conf`: sample config.
+- Config fields: `modules.{symmetry,notation}`, `defaults.{option,output,
+  export_format,layers,reference_cell}`, `behavior.verbosity`.
+- 4 config tests (parse modules, parse defaults, missing file, invalid file).
+- 2 modules tests (text, json).
+
+**Verified**
+- `laminar modules` → lists honeycomb, jam, cif, stdout.
+- With `.laminar.conf` in cwd, `sandwich -q` uses the config defaults.
+- With `--no-config`, defaults are ignored.
+
+### Fase 2c — JSON, quiet, verbose
+
 CLI (`sandwich`, `compare`) and Python bindings. Fase 1B is complete at
 `v0.1.0-alpha.4` (see below).
 

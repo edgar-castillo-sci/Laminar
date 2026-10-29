@@ -12,6 +12,7 @@ use laminar_core::types::JamChain;
 use laminar_core::JamOption;
 
 use crate::common::{metadata, Metadata};
+use crate::config::Config;
 
 #[derive(Args, Debug)]
 pub struct CompareArgs {
@@ -25,6 +26,7 @@ pub struct CompareArgs {
     pub files: Vec<PathBuf>,
 
     /// JAM option: PL|BPL|BU|BBU|OneH|OneT|Janus1H|Janus1T.
+    /// If not given, uses config default, then infers from the chains.
     #[arg(long, value_name = "OPT")]
     pub option: Option<String>,
 
@@ -52,8 +54,11 @@ struct CompareOutput {
     metadata: Metadata,
 }
 
-pub fn run(args: CompareArgs) -> Result<(), Box<dyn std::error::Error>> {
-    // 1. Collect all raw chains.
+pub fn run(
+    args: CompareArgs,
+    cfg: &Config,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Collect all raw chains (positional + files).
     let mut raw_chains: Vec<String> = args.chains.clone();
     for path in &args.files {
         let content = fs::read_to_string(path).map_err(|e| {
@@ -71,8 +76,12 @@ pub fn run(args: CompareArgs) -> Result<(), Box<dyn std::error::Error>> {
         return Err("no chains to compare (pass positional chains or --file)".into());
     }
 
-    // 2. Determine option.
-    let option = match args.option.as_deref() {
+    // 2. Determine option: CLI > config > infer.
+    let option = match args
+        .option
+        .as_deref()
+        .or(cfg.defaults.option.as_deref())
+    {
         Some(s) => parse_option(s)?,
         None => infer_option(&raw_chains)?,
     };
@@ -149,6 +158,7 @@ pub fn run(args: CompareArgs) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// Infer the JAM option from the chains, trying all 8 in order.
 fn infer_option(raw_chains: &[String]) -> Result<JamOption, Box<dyn std::error::Error>> {
     let all_options = [
         JamOption::PL,
