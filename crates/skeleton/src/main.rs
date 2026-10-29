@@ -18,9 +18,9 @@ use laminar_io::ReferenceCell;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Hardcoded MoS2 1H bilayer.
-    //    Layer 0: Mo at 1a (+j), empty at 1b (+0), S buckled at 1c (+k-k).
+    //    Layer 0: Mo at 1a (*j, fixed-site), empty at 1b (+0), S buckled at 1c (+k-k).
     //    Layer 1: same (2H stacking).
-    let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH)?;
+    let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH)?;
     println!("[skeleton] parsed chain: {}", chain.raw());
     println!("[skeleton] k = {}", chain.k());
 

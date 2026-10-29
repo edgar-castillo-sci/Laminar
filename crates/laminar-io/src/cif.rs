@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn cif_oneh_mos2_2h() {
         // MoS2 1H, 2 layers: 2 Mo (1 per layer) + 4 S (2 per layer, buckled).
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         let cif = to_cif(&chain, &mos2_cell(), "P 1").unwrap();
         assert!(cif.contains("_cell_length_a"));
         assert!(cif.contains("_symmetry_space_group_name_H-M 'P 1'"));
@@ -179,8 +179,8 @@ mod tests {
     }
 
     #[test]
-    fn cif_rejects_invalid_cell() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        fn cif_rejects_invalid_cell() {
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         let mut bad_cell = mos2_cell();
         bad_cell.z_down = 0.0; // V2 should trigger
         assert!(to_cif(&chain, &bad_cell, "P 1").is_err());

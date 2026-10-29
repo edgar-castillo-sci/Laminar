@@ -157,21 +157,21 @@ mod tests {
 
     #[test]
     fn v2_buckled_with_equal_z_fails() {
-        let chain = JamChain::parse("+0+j(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(1.5, 1.5);
         assert!(matches!(c.validate(&chain), Err(ReferenceCellError::V2 { .. })));
     }
 
     #[test]
     fn v2_buckled_with_nonneg_z_down_fails() {
-        let chain = JamChain::parse("+0+j(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(1.5, 0.5);
         assert!(matches!(c.validate(&chain), Err(ReferenceCellError::V2 { .. })));
     }
 
     #[test]
     fn v2_buckled_with_valid_z_passes() {
-        let chain = JamChain::parse("+0+j(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(1.5, -1.5);
         assert!(c.validate(&chain).is_ok());
     }
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn v2a_symmetric_pair_with_unequal_abs_fails() {
-        let chain = JamChain::parse("+0+j(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         // up == down ("k" == "k"), but |z_up| != |z_down|.
         let c = cell(2.0, -1.0);
         assert!(matches!(c.validate(&chain), Err(ReferenceCellError::V2a { .. })));
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn v2a_symmetric_pair_with_equal_abs_passes() {
-        let chain = JamChain::parse("+0+j(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(1.5, -1.5);
         assert!(c.validate(&chain).is_ok());
     }

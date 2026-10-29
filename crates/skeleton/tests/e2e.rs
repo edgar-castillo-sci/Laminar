@@ -7,7 +7,8 @@ use std::collections::HashMap;
 
 #[test]
 fn skeleton_pipeline() {
-    let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH)
+    // OneH uses *j (Fixed) per Tabla 7.
+    let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH)
         .expect("parse failed");
     assert_eq!(chain.k(), 2);
     assert_eq!(kappa_literal(&chain).raw(), kappa_fast(&chain).raw());
@@ -33,9 +34,9 @@ fn skeleton_pipeline() {
 #[test]
 fn kappa_parity_for_k2_to_k4() {
     let cases = [
-        ("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH),
-        ("+j+0(+k-k)/+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH),
-        ("+j+0(+k-k)/+j+0(+k-k)/+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH),
+        ("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH),
+        ("*j+0(+k-k)/*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH),
+        ("*j+0(+k-k)/*j+0(+k-k)/*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH),
     ];
     for (s, opt) in cases {
         let chain = JamChain::parse(s, opt).expect("parse failed");

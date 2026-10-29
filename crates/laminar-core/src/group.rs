@@ -140,17 +140,18 @@ mod tests {
         assert_eq!(Group::elements().len(), 12);
     }
 
-    #[test]
+   #[test]
     fn identity_fixes_chain() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        // OneH uses *j (Fixed) per Tabla 7.
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         let c2 = Group::apply(GroupElement::IDENTITY, &chain);
         assert_eq!(chain.raw(), c2.raw());
     }
 
     #[test]
     fn flip_reverses_layers() {
-        // Both rows valid for OneH (1×Empty, 1×Up, 1×Buckled).
-        let chain = JamChain::parse("+j+0(+k-k)/+0+j(+k-k)", JamOption::OneH).unwrap();
+        // Both rows valid for OneH (1×Empty, 1×Fixed, 1×Buckled).
+        let chain = JamChain::parse("*j+0(+k-k)/+0*j(+k-k)", JamOption::OneH).unwrap();
         let flipped = Group::apply(
             GroupElement {
                 sigma: Perm3::IDENTITY,
@@ -158,6 +159,6 @@ mod tests {
             },
             &chain,
         );
-        assert_eq!(flipped.raw(), "+0+j(+k-k)/+j+0(+k-k)");
+        assert_eq!(flipped.raw(), "+0*j(+k-k)/*j+0(+k-k)");
     }
 }

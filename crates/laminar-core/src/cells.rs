@@ -1,17 +1,14 @@
 //! Cell classification (Section 3 of *Stacking as Words*).
 //!
-//! The four cells PP, Pp, pP, Ap are defined on the **word**
-//! (the projection of a chain to {A,B,C}^k), not on the chain.
-//!
 //! Two Boolean properties:
 //! - `pa`: S3-palindromic (∃σ ∈ S3 with σ(w) = w^rev). NOT strict palindrome.
 //! - `per`: periodic (w = u^m, m ≥ 2).
 //!
-//! For options 1-5 and 7, the distinguished token is `+0` (one per row),
-//! so the word is well-defined. Options 6 and 8 (1T and Janus1T) have
-//! no `+0` in their rows; their word projection is deferred to Fase 1B.
+//! The word projection (see `word`) uses the distinguished token per
+//! *Stacking as Words* p.4: `*x` (Fixed) for options 5-8, `+0` (Empty)
+//! for options 1-4.
 
-use crate::types::{Cell, JamChain, Token};
+use crate::types::{Cell, JamChain, JamOption, Token};
 
 const S3_PERMS: [[u8; 3]; 6] = [
     [0, 1, 2], // id
@@ -24,39 +21,51 @@ const S3_PERMS: [[u8; 3]; 6] = [
 
 // ---------- word-level primitives ----------
 
-/// The word of a chain: column index of `+0` in each row.
+/// The word of a chain: the column index of the **distinguished token**
+/// in each row.
+///
+/// Per *Stacking as Words* (p.4): "the fixed-site token `*x` if the
+/// row contains one (options 5-8); otherwise, the empty-site token
+/// `+0` (all options)."
+///
+/// # Panics
+///
+/// Panics if a row lacks the expected distinguished token.
 pub fn word(chain: &JamChain) -> Vec<u8> {
+    let use_fixed = matches!(
+        chain.option(),
+        JamOption::OneH | JamOption::OneT | JamOption::Janus1H | JamOption::Janus1T
+    );
     chain
         .rows()
         .iter()
         .enumerate()
         .map(|(i, row)| {
-            row.iter()
-                .position(|t| matches!(t, Token::Empty))
-                .unwrap_or_else(|| {
-                    panic!(
-                        "row {} of chain (option {:?}) has no `+0` token; \
-                         word() is only defined for options with a distinguished `+0` \
-                         (1-5, 7). Options 6 and 8 are Fase 1B.",
-                        i,
-                        chain.option()
-                    )
-                }) as u8
+            let target = if use_fixed {
+                row.iter().position(|t| matches!(t, Token::Fixed(_)))
+            } else {
+                row.iter().position(|t| matches!(t, Token::Empty))
+            };
+            target.unwrap_or_else(|| {
+                panic!(
+                    "row {} of chain (option {:?}) has no `{}` token; \
+                     word() expects {} per *Stacking as Words* p.4",
+                    i,
+                    chain.option(),
+                    if use_fixed { "*x" } else { "+0" },
+                    if use_fixed { "*x (Fixed)" } else { "+0 (Empty)" }
+                )
+            }) as u8
         })
         .collect()
 }
 
 /// Whether the word is a strict palindrome (w == w^rev).
-///
-/// This is the `H` class (Ramsdell), not the cell predicate.
 pub fn is_palindromic_word(w: &[u8]) -> bool {
     w.iter().zip(w.iter().rev()).all(|(a, b)| a == b)
 }
 
 /// Whether the word is S3-palindromic: ∃σ ∈ S3 with σ(w) == w^rev.
-///
-/// This is the `pa` predicate of the cell classification
-/// (Definition 3 of *Stacking as Words*). Broader than `is_palindromic_word`.
 pub fn is_s3_palindromic_word(w: &[u8]) -> bool {
     let n = w.len();
     if n == 0 {
@@ -130,11 +139,47 @@ mod tests {
     use super::*;
     use crate::types::{JamOption, Token};
 
+    // ---------- word() token selection ----------
+
     #[test]
     fn word_of_mos2_bilayer() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
-        assert_eq!(word(&chain), vec![1, 1]);
+        // Option 5 uses *j (Fixed). Mo at col 0, empty at col 1, S at col 2.
+        // word = column of *j = [0, 0].
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
+        assert_eq!(word(&chain), vec![0, 0]);
     }
+
+    #[test]
+    fn word_uses_fixed_for_options_5_through_8() {
+        // Option 5: *j at column 1 → word [1].
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
+        assert_eq!(word(&chain), vec![1]);
+
+        // Option 6: *j at column 0 → word [0].
+        let chain = JamChain::parse("*j+k-k", JamOption::OneT).unwrap();
+        assert_eq!(word(&chain), vec![0]);
+
+        // Option 7: *j at column 2 → word [2].
+        let chain = JamChain::parse("+0(+k-l)*j", JamOption::Janus1H).unwrap();
+        assert_eq!(word(&chain), vec![2]);
+
+        // Option 8: *j at column 1 → word [1].
+        let chain = JamChain::parse("+k*j-l", JamOption::Janus1T).unwrap();
+        assert_eq!(word(&chain), vec![1]);
+    }
+
+    #[test]
+    fn word_uses_empty_for_options_1_through_4() {
+        // Option 1 (PL): +0 at column 0 → word [0].
+        let chain = JamChain::parse("+0+j+j", JamOption::PL).unwrap();
+        assert_eq!(word(&chain), vec![0]);
+
+        // Option 3 (BU): +0 at column 1 → word [1].
+        let chain = JamChain::parse("+j+0-j", JamOption::BU).unwrap();
+        assert_eq!(word(&chain), vec![1]);
+    }
+
+    // ---------- word-level primitives ----------
 
     #[test]
     fn is_palindromic_word_basic() {
@@ -148,8 +193,6 @@ mod tests {
 
     #[test]
     fn is_s3_palindromic_word_basic() {
-        // Every word of length ≤ 2 is S3-palindromic.
-        // Use &[u8] slices: arrays of different sizes can't be iterated together.
         let cases: &[&[u8]] = &[
             &[0u8], &[1], &[2],
             &[0, 0], &[0, 1], &[1, 2], &[2, 0],
@@ -157,10 +200,8 @@ mod tests {
         for w in cases {
             assert!(is_s3_palindromic_word(w), "should be S3-pal: {:?}", w);
         }
-        // [0,1,0,1] is S3-pal via σ=(0 1), though not strict-pal.
         assert!(is_s3_palindromic_word(&[0, 1, 0, 1]));
         assert!(!is_palindromic_word(&[0, 1, 0, 1]));
-        // [0,0,1] is not S3-pal (no σ works).
         assert!(!is_s3_palindromic_word(&[0, 0, 1]));
         assert!(!is_palindromic_word(&[0, 0, 1]));
     }
@@ -179,22 +220,20 @@ mod tests {
 
     #[test]
     fn cell_word_basic() {
-        // PP: S3-pal + per.
         assert_eq!(cell_word(&[0, 0, 0, 0]), Cell::PP);
-        assert_eq!(cell_word(&[0, 1, 0, 1]), Cell::PP); // S3-pal via (0 1)
-        // pP: S3-pal + non-per.
+        assert_eq!(cell_word(&[0, 1, 0, 1]), Cell::PP);
         assert_eq!(cell_word(&[0, 1, 0]), Cell::pP);
         assert_eq!(cell_word(&[0, 1, 1, 0]), Cell::pP);
-        // Pp: ¬S3-pal + per.
         assert_eq!(cell_word(&[0, 0, 1, 0, 0, 1]), Cell::Pp);
-        // Ap: ¬S3-pal + non-per.
         assert_eq!(cell_word(&[0, 0, 1]), Cell::Ap);
         assert_eq!(cell_word(&[0, 0, 1, 0, 0, 2]), Cell::Ap);
     }
 
+    // ---------- chain-level ----------
+
     #[test]
     fn mos2_bilayer_is_pp() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         assert_eq!(cell(&chain), Cell::PP);
         assert_eq!(period(&chain), Some(1));
         assert!(is_palindromic(&chain));
@@ -232,14 +271,10 @@ mod tests {
                     Cell::Ap => has[3] = true,
                 }
             }
-            // PP: always nonempty (k >= 2, word [0]^k).
             assert!(has[0], "PP empty at k={}", k);
-            // Pp: nonempty iff k composite, k >= 6, k != 4 (Paper 2, Thm 2).
             let expected_pp = is_composite(k) && k != 4;
             assert_eq!(has[1], expected_pp, "Pp nonemptiness at k={}", k);
-            // pP: nonempty for all k >= 2 ([0,1] at k=2).
             assert!(has[2], "pP empty at k={}", k);
-            // Ap: nonempty for k >= 3 (per paper); empty at k=2.
             if k >= 3 {
                 assert!(has[3], "Ap empty at k={}", k);
             } else {

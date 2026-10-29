@@ -97,8 +97,6 @@ impl JamOption {
 /// The four combinatorial cells of *Stacking as Words*.
 ///
 /// Mixed case is intentional: uppercase = "yes", lowercase = "no".
-/// `PP` = palindromic + periodic, `Pp` = non-palindromic + periodic,
-/// `pP` = palindromic + non-periodic, `Ap` = neither.
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Cell {
@@ -404,19 +402,20 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
                 }),
             }
         }
-        // OneH (5): 1×Empty + 1×Up + 1×Buckled(up==down).
+        // OneH (5): 1×Empty + 1×Fixed(metal) + 1×Buckled(up==down).
+        //   Per Tabla 7 of *Orbits as Multisets*: [+0, *j, (+k-k)].
         JamOption::OneH => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
-            let ups = row.iter().filter(|t| matches!(t, Token::Up(_))).count();
+            let fixeds = row.iter().filter(|t| matches!(t, Token::Fixed(_))).count();
             let buckleds = row
                 .iter()
                 .filter(|t| matches!(t, Token::Buckled { .. }))
                 .count();
-            if empties != 1 || ups != 1 || buckleds != 1 {
+            if empties != 1 || fixeds != 1 || buckleds != 1 {
                 return Err(ParseError::InvalidRowForOption {
                     row: idx,
                     option,
-                    expected: "1×Empty, 1×Up, 1×Buckled",
+                    expected: "1×Empty, 1×Fixed, 1×Buckled",
                     got: describe_row(row),
                 });
             }
@@ -434,8 +433,6 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
             Ok(())
         }
         // OneT (6): 0×Empty + 1×Fixed(metal) + 1×Up + 1×Down(same letter).
-        //   The metal is `*j` (fixed-site), invariant under v = sign∘flip.
-        //   See docs/discrepancies.md (Appendix A errata).
         JamOption::OneT => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
             let fixeds = row.iter().filter(|t| matches!(t, Token::Fixed(_))).count();
@@ -635,18 +632,19 @@ impl std::error::Error for ParseError {}
 mod tests {
     use super::*;
 
-    // ---------- Phase 1A: PL, BU, OneH ----------
+    // ---------- Fase 1A: PL, BU, OneH ----------
 
     #[test]
     fn parse_mos2_bilayer() {
-        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        // OneH uses *j (Fixed) for the metal, per Tabla 7.
+        let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         assert_eq!(chain.k(), 2);
-        assert_eq!(chain.raw(), "+j+0(+k-k)/+j+0(+k-k)");
+        assert_eq!(chain.raw(), "*j+0(+k-k)/*j+0(+k-k)");
     }
 
     #[test]
     fn parse_rejects_janus_token_in_oneh() {
-        let err = JamChain::parse("+j+0(+k-l)/+j+0(+k-l)", JamOption::OneH).unwrap_err();
+        let err = JamChain::parse("*j+0(+k-l)/*j+0(+k-l)", JamOption::OneH).unwrap_err();
         assert!(matches!(
             err,
             ParseError::Row { .. } | ParseError::JanusTokenInOneH { .. }
@@ -655,7 +653,7 @@ mod tests {
 
     #[test]
     fn parse_rejects_wrong_row_length() {
-        let err = JamChain::parse("+j+0/+j+0", JamOption::OneH).unwrap_err();
+        let err = JamChain::parse("*j+0/*j+0", JamOption::OneH).unwrap_err();
         assert!(matches!(err, ParseError::Row { .. }));
     }
 
@@ -727,10 +725,22 @@ mod tests {
 
     #[test]
     fn parse_oneh_rows() {
-        for s in ["+0+j(+k-k)", "+j+0(+k-k)", "(+k-k)+j+0"] {
+        // OneH: [+0, *j, (+k-k)] (Tabla 7).
+        for s in ["+0*j(+k-k)", "*j+0(+k-k)", "(+k-k)*j+0"] {
             let chain = JamChain::parse(s, JamOption::OneH).unwrap();
             assert_eq!(chain.k(), 1);
         }
+    }
+
+    #[test]
+    fn parse_oneh_rejects_plus_j_metal() {
+        // Option 5 uses *j (Fixed), not +j (Up).
+        let err = JamChain::parse("+j+0(+k-k)", JamOption::OneH).unwrap_err();
+        assert!(
+            matches!(err, ParseError::InvalidRowForOption { .. }),
+            "expected InvalidRowForOption, got {:?}",
+            err
+        );
     }
 
     #[test]
@@ -744,7 +754,7 @@ mod tests {
         assert_eq!(chain.raw(), "+j+0+j/+0+j+j");
     }
 
-    // ---------- Phase 1B.1: BPL, BBU ----------
+    // ---------- Fase 1B.1: BPL, BBU ----------
 
     #[test]
     fn parse_bpl_rows() {
@@ -806,7 +816,7 @@ mod tests {
         assert!(matches!(err, ParseError::InvalidRowForOption { .. }));
     }
 
-    // ---------- Phase 1B.2: OneT, Janus1H, Janus1T (metal = `*j`) ----------
+    // ---------- Fase 1B.2: OneT, Janus1H, Janus1T ----------
 
     #[test]
     fn parse_one_t_rows() {
@@ -820,14 +830,12 @@ mod tests {
 
     #[test]
     fn parse_one_t_rejects_empty() {
-        // OneT rows must have 0 Empty tokens.
         let err = JamChain::parse("+0*j-k", JamOption::OneT).unwrap_err();
         assert!(matches!(err, ParseError::InvalidRowForOption { .. }));
     }
 
     #[test]
     fn parse_one_t_rejects_mismatched_down() {
-        // The Down letter must match the Up letter.
         let err = JamChain::parse("*j+k-l", JamOption::OneT).unwrap_err();
         assert!(
             matches!(err, ParseError::MismatchedLetters { .. }),
@@ -849,7 +857,6 @@ mod tests {
 
     #[test]
     fn parse_janus1h_rejects_symmetric_buckled() {
-        // Janus1H requires Buckled.up != Buckled.down.
         let err = JamChain::parse("+0*j(+k-k)", JamOption::Janus1H).unwrap_err();
         assert!(matches!(err, ParseError::InvalidRowForOption { .. }));
     }
@@ -867,7 +874,6 @@ mod tests {
 
     #[test]
     fn parse_janus1t_rejects_matching_letters() {
-        // Janus1T requires Down distinct from the Up letter.
         let err = JamChain::parse("*j+k-k", JamOption::Janus1T).unwrap_err();
         assert!(
             matches!(err, ParseError::MismatchedLetters { .. }),
