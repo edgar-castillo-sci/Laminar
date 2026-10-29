@@ -104,17 +104,28 @@ fn wyckoff_position(j: usize) -> (f64, f64) {
         _ => unreachable!("column index out of range"),
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use laminar_core::{JamChain, JamOption};
+    use laminar_core::JamOption;
     use std::collections::HashMap;
+
+    // ---------- cell helpers ----------
 
     fn mos2_cell() -> ReferenceCell {
         let mut species_map = HashMap::new();
         species_map.insert("j".into(), "Mo".into());
         species_map.insert("k".into(), "S".into());
         ReferenceCell { a: 3.16, c: 12.30, z_up: 1.56, z_down: -1.56, species_map }
+    }
+
+    fn mossse_janus_cell() -> ReferenceCell {
+        let mut species_map = HashMap::new();
+        species_map.insert("j".into(), "Mo".into());
+        species_map.insert("k".into(), "S".into());
+        species_map.insert("l".into(), "Se".into());
+        ReferenceCell { a: 3.20, c: 12.50, z_up: 1.60, z_down: -1.60, species_map }
     }
 
     fn pl_cell() -> ReferenceCell {
@@ -133,11 +144,66 @@ mod tests {
         ReferenceCell { a: 3.30, c: 10.50, z_up: 0.50, z_down: -0.50, species_map }
     }
 
+    // ---------- CIF helpers ----------
+
     fn count_atoms(cif: &str, species: &str) -> usize {
         cif.lines()
             .filter(|l| l.split_whitespace().nth(1) == Some(species))
             .count()
     }
+
+    fn z_values(cif: &str, species: &str) -> Vec<f64> {
+        cif.lines()
+            .filter(|l| l.split_whitespace().nth(1) == Some(species))
+            .filter_map(|l| l.split_whitespace().nth(4))
+            .filter_map(|s| s.parse::<f64>().ok())
+            .collect()
+    }
+
+    /// Half the interlayer distance. For k=2, layers are at z=0.25 and 0.75,
+    /// so half-distance = 0.25. This is well above z_up/c (~0.13) and
+    /// well below the interlayer distance (0.5), so it isolates atoms
+    /// from the same layer.
+    const HALF_INTERLAYER: f64 = 0.25;
+
+    /// For each Mo, assert that there is at least one S above it and one
+    /// Se below it *within the same layer* (|z_diff| < HALF_INTERLAYER).
+    /// This avoids the cross-layer false positive where a Mo from layer 0
+    /// is compared against an Se from layer 1.
+    fn assert_janus_z_layout(cif: &str) {
+        let mo_z = z_values(cif, "Mo");
+        let s_z = z_values(cif, "S");
+        let se_z = z_values(cif, "Se");
+        assert_eq!(mo_z.len(), 2, "expected 2 Mo");
+        assert_eq!(s_z.len(), 2, "expected 2 S");
+        assert_eq!(se_z.len(), 2, "expected 2 Se");
+        for m in &mo_z {
+            let s_near: Vec<f64> = s_z
+                .iter()
+                .copied()
+                .filter(|s| (s - m).abs() < HALF_INTERLAYER)
+                .collect();
+            let se_near: Vec<f64> = se_z
+                .iter()
+                .copied()
+                .filter(|se| (se - m).abs() < HALF_INTERLAYER)
+                .collect();
+            assert!(
+                s_near.iter().any(|s| *s > *m),
+                "no S above Mo at z={} (s_near={:?})",
+                m,
+                s_near
+            );
+            assert!(
+                se_near.iter().any(|se| *se < *m),
+                "no Se below Mo at z={} (se_near={:?})",
+                m,
+                se_near
+            );
+        }
+    }
+
+    // ---------- tests ----------
 
     #[test]
     fn cif_oneh_mos2_2h() {
@@ -148,7 +214,64 @@ mod tests {
         assert!(cif.contains("_symmetry_space_group_name_H-M 'P 1'"));
         assert_eq!(count_atoms(&cif, "Mo"), 2);
         assert_eq!(count_atoms(&cif, "S"), 4);
-        assert_eq!(cif.lines().filter(|l| l.contains(" Mo ")).count(), 2);
+    }
+
+    #[test]
+    fn cif_one_t_1t_mos2() {
+        // MoS2 1T, 2 layers. Row = [*j, +k, -k] (Mo fixed in plane,
+        // one S up, one S down per layer).
+        let chain = JamChain::parse("*j+k-k/*j+k-k", JamOption::OneT).unwrap();
+        let cif = to_cif(&chain, &mos2_cell(), "P 1").unwrap();
+        assert_eq!(count_atoms(&cif, "Mo"), 2);
+        assert_eq!(count_atoms(&cif, "S"), 4);
+        let mo_z = z_values(&cif, "Mo");
+        let s_z = z_values(&cif, "S");
+        assert_eq!(mo_z.len(), 2);
+        assert_eq!(s_z.len(), 4);
+        // S atoms should occupy 4 distinct z values (2 per layer × up/down).
+        let unique_s_z: std::collections::HashSet<_> =
+            s_z.iter().map(|z| (z * 10000.0).round() as i64).collect();
+        assert_eq!(
+            unique_s_z.len(),
+            4,
+            "expected 4 distinct S z values (up/down × 2 layers), got {:?}",
+            s_z
+        );
+        // Mo should not coincide with any S (different z).
+        for m in &mo_z {
+            for s in &s_z {
+                assert!(
+                    (m - s).abs() > 1e-3,
+                    "Mo at {} coincides with S at {}",
+                    m,
+                    s
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn cif_janus1h_mossse() {
+        // Janus MoSSe 1H, 2 layers. Row = [+0, *j, (+k-l)]
+        // (Mo fixed in plane, S up, Se down).
+        let chain = JamChain::parse("+0*j(+k-l)/+0*j(+k-l)", JamOption::Janus1H).unwrap();
+        let cif = to_cif(&chain, &mossse_janus_cell(), "P 1").unwrap();
+        assert_eq!(count_atoms(&cif, "Mo"), 2);
+        assert_eq!(count_atoms(&cif, "S"), 2);
+        assert_eq!(count_atoms(&cif, "Se"), 2);
+        assert_janus_z_layout(&cif);
+    }
+
+    #[test]
+    fn cif_janus1t_mossse() {
+        // Janus MoSSe 1T, 2 layers. Row = [*j, +k, -l]
+        // (Mo fixed in plane, S up via +k, Se down via -l).
+        let chain = JamChain::parse("*j+k-l/*j+k-l", JamOption::Janus1T).unwrap();
+        let cif = to_cif(&chain, &mossse_janus_cell(), "P 1").unwrap();
+        assert_eq!(count_atoms(&cif, "Mo"), 2);
+        assert_eq!(count_atoms(&cif, "S"), 2);
+        assert_eq!(count_atoms(&cif, "Se"), 2);
+        assert_janus_z_layout(&cif);
     }
 
     #[test]
@@ -166,20 +289,19 @@ mod tests {
         let chain = JamChain::parse("+0+j-j/+0+j-j", JamOption::BU).unwrap();
         let cif = to_cif(&chain, &bu_cell(), "P 1").unwrap();
         assert_eq!(count_atoms(&cif, "P"), 4);
-        // 2 P at z = z_layer + z_up/c, 2 at z = z_layer + z_down/c.
-        // Verify that z values are distinct (buckled).
         let zs: Vec<f64> = cif
             .lines()
             .filter(|l| l.split_whitespace().nth(1) == Some("P"))
             .filter_map(|l| l.split_whitespace().nth(4))
             .filter_map(|s| s.parse::<f64>().ok())
             .collect();
-        let unique: std::collections::HashSet<_> = zs.iter().map(|z| (z * 1000.0).round() as i64).collect();
+        let unique: std::collections::HashSet<_> =
+            zs.iter().map(|z| (z * 1000.0).round() as i64).collect();
         assert!(unique.len() >= 2, "expected buckled z values, got {:?}", zs);
     }
 
     #[test]
-        fn cif_rejects_invalid_cell() {
+    fn cif_rejects_invalid_cell() {
         let chain = JamChain::parse("*j+0(+k-k)/*j+0(+k-k)", JamOption::OneH).unwrap();
         let mut bad_cell = mos2_cell();
         bad_cell.z_down = 0.0; // V2 should trigger

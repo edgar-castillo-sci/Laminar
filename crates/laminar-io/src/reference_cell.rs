@@ -211,12 +211,62 @@ mod tests {
 
     // ---------- Missing species ----------
 
-    #[test]
+        #[test]
     fn missing_species_errors() {
         let c = cell(1.5, -1.5);
         assert!(matches!(
             c.species("z"),
             Err(ReferenceCellError::MissingSpecies(_))
+        ));
+    }
+
+    // ---------- Janus-specific validation ----------
+
+    fn janus_cell(z_up: f64, z_down: f64) -> ReferenceCell {
+        let mut species_map = HashMap::new();
+        species_map.insert("j".into(), "Mo".into());
+        species_map.insert("k".into(), "S".into());
+        species_map.insert("l".into(), "Se".into());
+        ReferenceCell { a: 3.2, c: 12.5, z_up, z_down, species_map }
+    }
+
+    #[test]
+    fn v2_janus_pair_with_symmetric_z_passes() {
+        // Janus (+k-l) with |z_up| == |z_down| passes V2a
+        // (V2a only requires equality for symmetric pairs, up==down).
+        let chain = JamChain::parse("+0*j(+k-l)", JamOption::Janus1H).unwrap();
+        let c = janus_cell(1.6, -1.6);
+        assert!(c.validate(&chain).is_ok());
+    }
+
+    #[test]
+    fn v2_janus_pair_with_asymmetric_z_passes() {
+        // Janus (+k-l) with asymmetric z (S at 1.7, Se at -1.5) is allowed.
+        // V2a only requires |z_up| == |z_down| for symmetric pairs.
+        let chain = JamChain::parse("+0*j(+k-l)", JamOption::Janus1H).unwrap();
+        let c = janus_cell(1.7, -1.5);
+        assert!(c.validate(&chain).is_ok());
+    }
+
+    #[test]
+    fn v2_janus_pair_with_nonneg_z_down_fails() {
+        // V2 still requires z_down < 0 < z_up, regardless of symmetry.
+        let chain = JamChain::parse("+0*j(+k-l)", JamOption::Janus1H).unwrap();
+        let c = janus_cell(1.6, 0.5);
+        assert!(matches!(
+            c.validate(&chain),
+            Err(ReferenceCellError::V2 { .. })
+        ));
+    }
+
+    #[test]
+    fn v2_janus_pair_with_equal_z_fails() {
+        // V2 still requires z_up != z_down.
+        let chain = JamChain::parse("+0*j(+k-l)", JamOption::Janus1H).unwrap();
+        let c = janus_cell(1.5, 1.5);
+        assert!(matches!(
+            c.validate(&chain),
+            Err(ReferenceCellError::V2 { .. })
         ));
     }
 }
