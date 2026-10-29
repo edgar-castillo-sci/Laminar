@@ -1,4 +1,5 @@
 # Laminar
+[Leer en español](README.es.md)
 
 A Rust workspace for the exact enumeration, canonicalization, classification, and export of stacking configurations in layered materials. Ships with a CLI and Python bindings.
 
