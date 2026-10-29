@@ -1,0 +1,17 @@
+# ReferenceCell for MoS2 in the 1H phase.
+#
+# Used with:
+#   laminar sandwich -n 4 --option OneH -e cif \
+#       --output out/ --reference-cell examples/MoS2_1H.toml
+#
+# Lattice parameters are experimental values for bulk MoS2
+# (a = 3.16 Å, c = 12.30 Å). Override per material as needed.
+
+a = 3.16
+c = 12.30
+z_up = 1.56
+z_down = -1.56
+
+[species_map]
+j = "Mo"
+k = "S"

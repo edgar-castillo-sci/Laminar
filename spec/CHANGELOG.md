@@ -10,6 +10,53 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ---
 
+
+---
+
+## v0.1.0-alpha.5 — in development (Fase 2)
+
+CLI (`sandwich`, `compare`) and Python bindings. Fase 1B is complete at
+`v0.1.0-alpha.4` (see below).
+
+### Fase 2a — `sandwich` CLI (basic)
+
+**Added**
+- `crates/laminar-cli/src/sandwich.rs`:
+  - `sandwich -n K --option OPT -e stdout`: print all canonical classes.
+  - `sandwich -n K --option OPT -q`: print the class count.
+  - `sandwich -n K --option OPT -e jam --output DIR`: write JAM file.
+  - `sandwich -n K --option OPT -e cif --output DIR --reference-cell FILE`: write CIF files.
+  - `sandwich --list-options`: list the 8 JAM options.
+- `ReferenceCell::from_toml(path)` in `laminar-io` (serde + toml,
+  with contextual error messages).
+- `examples/MoS2_1H.toml`: sample ReferenceCell.
+- 10 integration tests in `crates/laminar-cli/tests/sandwich.rs`,
+  including `cif_export_end_to_end`.
+- 1 test `from_toml_parses_reference_cell` in `laminar-io`.
+- `tempfile` as dev-dep in `laminar-io` and `laminar-cli`;
+  `assert_cmd` + `predicates` in `laminar-cli`.
+
+**Verified**
+- `sandwich -n 6 --option PL -q` → 70.
+- `sandwich -n 2 --option OneH -e cif` → 5 CIFs (Mo at in-plane z,
+  S buckled).
+- 102 tests total (68 core + 22 io + 10 cli + 2 e2e).
+
+**Deferred**
+- Templates (`"ACB[]AC"`): Fase 2d.
+- `compare`: Fase 2b.
+- `--json`, `--verbose`, `--quiet`: Fase 2c.
+- `--threads`, `--stream`: Fase 2.5.
+
+---
+
+## v0.1.0-alpha.4 — 2026-10-28 — Fase 1B complete
+
+---
+
+## v0.1.0-alpha.4 — 2026-10-28 — Fase 1B complete
+
+
 ## v0.1.0-alpha.4 — in development (Fase 1B)
 
 Fase 1B adds parser, tests, and CIF coverage for the five options not

@@ -1,10 +1,45 @@
-//! Laminar CLI (Fase 2+).
+//! Laminar CLI.
 //!
-//! **Skeleton status:** not yet implemented. Commands will be added
-//! in Fase 2 (sandwich, compare) and Fase 7 (sample).
+//! Commands:
+//! - `sandwich`: generate, export, and count JAM stacking configurations.
+//! - `compare`: (Fase 2b) check equivalence between chains.
+//! - `sample`: (Fase 7) MCMC sampling.
+//! - `modules`: (Fase 3) list available modules.
 
-fn main() {
-    eprintln!("[Laminar] CLI not yet implemented (Fase 2).");
-    eprintln!("[Laminar] Use crates/skeleton for Fase 0.5 validation.");
-    std::process::exit(1);
+mod sandwich;
+
+use clap::{Parser, Subcommand};
+use std::process::ExitCode;
+
+/// Infrastructure for laminar stacking.
+///
+/// Defaults: honeycomb symmetry (G = S3 × Z/2), JAM notation.
+#[derive(Parser)]
+#[command(name = "laminar")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
+#[command(about = "Generate, canonicalize, and export laminar stacking configurations")]
+#[command(propagate_version = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Generate and export JAM stacking configurations.
+    Sandwich(sandwich::SandwichArgs),
+}
+
+fn main() -> ExitCode {
+    let cli = Cli::parse();
+    let result = match cli.command {
+        Commands::Sandwich(args) => sandwich::run(args),
+    };
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("[laminar] error: {}", e);
+            ExitCode::FAILURE
+        }
+    }
 }

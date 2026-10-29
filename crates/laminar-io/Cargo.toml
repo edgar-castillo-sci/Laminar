@@ -3,9 +3,12 @@ name = "laminar-io"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Export formats for JAM chains (CIF, POSCAR, XYZ, TSV)"
+description = "Export stacking configurations to CIF, POSCAR, XYZ, TSV. Reference cells for honeycomb TMDCs."
 
 [dependencies]
 laminar-core.workspace = true
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
+
+[dev-dependencies]
+tempfile = "3"

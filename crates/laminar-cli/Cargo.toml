@@ -3,7 +3,7 @@ name = "laminar-cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Laminar CLI: sandwich, compare, sample, modules"
+description = "CLI: sandwich, compare, sample, modules. Default: honeycomb + JAM."
 
 [[bin]]
 name = "laminar"
@@ -14,3 +14,9 @@ laminar-core.workspace = true
 laminar-io.workspace = true
 laminar-markov.workspace = true
 clap = { version = "4", features = ["derive"] }
+toml = "0.8"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"

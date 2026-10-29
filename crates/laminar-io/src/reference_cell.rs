@@ -28,6 +28,42 @@ pub struct ReferenceCell {
 }
 
 impl ReferenceCell {
+    /// Load a `ReferenceCell` from a TOML file.
+    ///
+    /// ```toml
+    /// # examples/MoS2_1H.toml
+    /// a = 3.16
+    /// c = 12.30
+    /// z_up = 1.56
+    /// z_down = -1.56
+    ///
+    /// [species_map]
+    /// j = "Mo"
+    /// k = "S"
+    /// ```
+    pub fn from_toml(path: &std::path::Path) -> Result<Self, Box<dyn std::error::Error>> {
+    let s = std::fs::read_to_string(path).map_err(|e| {
+        format!(
+            "failed to read ReferenceCell from '{}': {}",
+            path.display(),
+            e
+        )
+    })?;
+    let t: ReferenceCellToml = toml::from_str(&s).map_err(|e| {
+        format!(
+            "failed to parse ReferenceCell from '{}': {}",
+            path.display(),
+            e
+        )
+    })?;
+    Ok(ReferenceCell {
+        a: t.a,
+        c: t.c,
+        z_up: t.z_up,
+        z_down: t.z_down,
+        species_map: t.species_map,
+    })
+    }
     /// Validate the cell against a chain (rules V1-V5).
     pub fn validate(&self, chain: &JamChain) -> Result<(), ReferenceCellError> {
         let has_down = chain.rows().iter().flatten().any(|t| matches!(t, Token::Down(_)));
@@ -74,6 +110,7 @@ impl ReferenceCell {
         Ok(())
     }
 
+    /// Look up the chemical species for a JAM letter.
     pub fn species(&self, letter: &str) -> Result<&str, ReferenceCellError> {
         self.species_map
             .get(letter)
@@ -125,6 +162,16 @@ impl fmt::Display for ReferenceCellError {
 
 impl std::error::Error for ReferenceCellError {}
 
+/// TOML schema for `ReferenceCell::from_toml`.
+#[derive(serde::Deserialize)]
+struct ReferenceCellToml {
+    a: f64,
+    c: f64,
+    z_up: f64,
+    z_down: f64,
+    species_map: HashMap<String, String>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -157,6 +204,7 @@ mod tests {
 
     #[test]
     fn v2_buckled_with_equal_z_fails() {
+        // OneH uses *j (Fixed), per Tabla 7.
         let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(1.5, 1.5);
         assert!(matches!(c.validate(&chain), Err(ReferenceCellError::V2 { .. })));
@@ -180,8 +228,8 @@ mod tests {
 
     #[test]
     fn v2a_symmetric_pair_with_unequal_abs_fails() {
-        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         // up == down ("k" == "k"), but |z_up| != |z_down|.
+        let chain = JamChain::parse("+0*j(+k-k)", JamOption::OneH).unwrap();
         let c = cell(2.0, -1.0);
         assert!(matches!(c.validate(&chain), Err(ReferenceCellError::V2a { .. })));
     }
@@ -211,7 +259,7 @@ mod tests {
 
     // ---------- Missing species ----------
 
-        #[test]
+    #[test]
     fn missing_species_errors() {
         let c = cell(1.5, -1.5);
         assert!(matches!(
@@ -268,5 +316,27 @@ mod tests {
             c.validate(&chain),
             Err(ReferenceCellError::V2 { .. })
         ));
+    }
+
+    // ---------- TOML loading (Fase 2a) ----------
+
+    #[test]
+    fn from_toml_parses_reference_cell() {
+        use std::io::Write;
+        let mut f = tempfile::NamedTempFile::new().unwrap();
+        writeln!(f, "a = 3.16").unwrap();
+        writeln!(f, "c = 12.30").unwrap();
+        writeln!(f, "z_up = 1.56").unwrap();
+        writeln!(f, "z_down = -1.56").unwrap();
+        writeln!(f, "[species_map]").unwrap();
+        writeln!(f, "j = \"Mo\"").unwrap();
+        writeln!(f, "k = \"S\"").unwrap();
+        let cell = ReferenceCell::from_toml(f.path()).unwrap();
+        assert!((cell.a - 3.16).abs() < 1e-9);
+        assert!((cell.c - 12.30).abs() < 1e-9);
+        assert!((cell.z_up - 1.56).abs() < 1e-9);
+        assert!((cell.z_down + 1.56).abs() < 1e-9);
+        assert_eq!(cell.species_map.get("j").map(|s| s.as_str()), Some("Mo"));
+        assert_eq!(cell.species_map.get("k").map(|s| s.as_str()), Some("S"));
     }
 }
