@@ -9,18 +9,58 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 `**BREAKING**` marker.
 
 ---
+---
 
-### Fase 1A.7 — Criterion benchmarks
+## v0.1.0-alpha.4 — in development (Fase 1B)
+
+Tracking parser + tests for the remaining five options: BPL (2), BBU (4),
+OneT (6), Janus1H (7), Janus1T (8). Fase 1A is complete at v0.1.0-alpha.3
+(see below).
+
+### Fase 1B.2 — Parser OneT + Janus1H + Janus1T
 
 **Added**
-- `benches/{canon,children,augment}.rs` (Criterion 0.5, `html_reports`).
-- `scripts/bench.sh`.
-- `docs/benchmarks.md` with measured results.
+- `validate_row` for OneT, Janus1H, Janus1T.
+- `all_rows`: OneT (6), Janus1H (12), Janus1T (12).
+- 7 tests in `types.rs` + 6 tests in `children.rs` (including
+  `fiber_theorem1_{one_t,janus1h,janus1t}`).
+- `count.rs` accepts all 8 options.
+- `parity_canonjam.py` covers 37 counts (all 8 options).
 
-**Measured** (AMD Ryzen 5 4600H, release)
-- κ_fast speedup vs κ_literal: **4.63–5.27×** (theoretical 6×).
-- fiber vs children ratio: **7.88–8.74×**.
-- augment_to n=3→4 growth: 3.16× (PL), 5.71× (BU), 5.61× (OneH).
+**Fixed**
+**Implementation note**
+  - Options 6, 7, 8 use `*j` (fixed-site) for the metal, consistent
+    with Appendix A of *Orbits as Multisets* and with the physics
+    (metal is in-plane in 1T TMDCs). During early development we
+    briefly used `+j` (which breaks the group action under
+    `v = sign∘flip`), but the final implementation matches the paper.
+- Two test expectations corrected from `InvalidRowForOption` to
+  `MismatchedLetters` (more specific, consistent with PL/BPL/BU/BBU).
+
+**Validated**
+- OneT: n=2..6 → 5, 21, 120, 666, 3960 (matches Paper 1, Table 3, BPL/BU).
+- Janus1H: n=2..5 → 16, 144, 1776, 20736 (matches BBU).
+- Janus1T: n=2..5 → 16, 144, 1776, 20736 (matches BBU).
+
+### Fase 1B.1 — Parser BPL + BBU
+
+**Added**
+- `validate_row` for BPL (2×Up different letters) and BBU
+  (Up + Down different letters, both orientations).
+- `all_rows`: BPL (6), BBU (12).
+- 7 tests in `types.rs` + 4 tests in `children.rs`.
+- `count.rs` example accepts BPL and BBU.
+- `parity_canonjam.py` includes BPL and BBU tables.
+
+**Validated**
+- BPL: n=2..6 → 5, 21, 120, 666, 3960 (matches Paper 1, Table 3).
+- BBU: n=2..5 → 16, 144, 1776, 20736 (matches Paper 1, Table 3).
+
+### Open
+- **D7:** `word()` and `cell()` for OneT and Janus1T (no `+0` token;
+  they use `*j`). Resolution in Fase 1B.3.
+- **D8:** `pl_cell` uses `z_up = 0.01` (not 0.0) to satisfy V4.
+  Refinement in Fase 1B.4.
 
 ---
 

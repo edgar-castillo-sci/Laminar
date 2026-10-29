@@ -4,7 +4,7 @@
 //!   cargo run --example count -- <option> <n>
 //!   cargo run --example count -- PL 8
 //!
-//! Options: PL, BU, OneH.
+//! Options: PL, BPL, BU, BBU, OneH, OneT, Janus1H, Janus1T.
 
 use laminar_core::children::augment_to;
 use laminar_core::JamOption;
@@ -13,7 +13,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 3 {
         eprintln!("usage: count <option> <n>");
-        eprintln!("  option: PL | BU | OneH");
+        eprintln!("  option: PL | BPL | BU | BBU | OneH | OneT | Janus1H | Janus1T");
         eprintln!("  n:      number of layers (>= 1)");
         std::process::exit(1);
     }
@@ -23,6 +23,9 @@ fn main() {
         "BU" => JamOption::BU,
         "BBU" => JamOption::BBU,
         "OneH" => JamOption::OneH,
+        "OneT" => JamOption::OneT,
+        "Janus1H" => JamOption::Janus1H,
+        "Janus1T" => JamOption::Janus1T,
         other => {
             eprintln!("unknown option: {}", other);
             std::process::exit(1);

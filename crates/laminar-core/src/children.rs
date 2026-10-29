@@ -19,7 +19,7 @@ use crate::types::{JamChain, JamOption, Token};
 /// Only options PL (1), BU (3), and OneH (5) are implemented in Fase 1A.
 pub fn all_rows(option: JamOption) -> Vec<[Token; 3]> {
     match option {
-        // PL: all distinct permutations of [+0, +j, +j] → 3 rows.
+        // PL: 3 permutations of [+0, +j, +j].
         JamOption::PL => {
             let j = "j".to_string();
             vec![
@@ -28,18 +28,18 @@ pub fn all_rows(option: JamOption) -> Vec<[Token; 3]> {
                 [Token::Up(j.clone()), Token::Up(j.clone()), Token::Empty],
             ]
         }
-        // BPL: all distinct permutations of [+0, +j, +k] → 6 rows.
+        // BPL: 6 permutations of [+0, +j, +k].
         JamOption::BPL => permute_three(
             Token::Empty,
             Token::Up("j".to_string()),
             Token::Up("k".to_string()),
         ),
-        // BU: all distinct permutations of [+0, +j, -j] → 6 rows.
+        // BU: 6 permutations of [+0, +j, -j].
         JamOption::BU => {
             let j = "j".to_string();
             permute_three(Token::Empty, Token::Up(j.clone()), Token::Down(j))
         }
-        // BBU: all distinct permutations of [+0, +j, -k] and [+0, -j, +k] → 12 rows.
+        // BBU: 12 permutations of [+0, +j, -k] and [+0, -j, +k].
         JamOption::BBU => {
             let mut rows = permute_three(
                 Token::Empty,
@@ -53,22 +53,51 @@ pub fn all_rows(option: JamOption) -> Vec<[Token; 3]> {
             ));
             rows
         }
-        // OneH: all distinct permutations of [+0, +j, (+k-k)] → 6 rows.
+        // OneH: 6 permutations of [+0, +j, (+k-k)].
         JamOption::OneH => {
             let k = "k".to_string();
             permute_three(
                 Token::Empty,
                 Token::Up("j".to_string()),
-                Token::Buckled {
-                    up: k.clone(),
-                    down: k,
-                },
+                Token::Buckled { up: k.clone(), down: k },
             )
         }
-        other => unimplemented!(
-            "all_rows not implemented for {:?} (Fase 1B.2: OneT, Janus1H, Janus1T)",
-            other
+        // OneT: 6 permutations of [*j, +k, -k].
+        //   Metal is `*j` (fixed-site), invariant under v = sign∘flip.
+        //   See note in types.rs::validate_row (Appendix A errata).
+        JamOption::OneT => permute_three(
+            Token::Fixed("j".to_string()),
+            Token::Up("k".to_string()),
+            Token::Down("k".to_string()),
         ),
+        // Janus1H: 12 permutations of [+0, *j, (+k-l)] and [+0, *j, (-k+l)].
+        JamOption::Janus1H => {
+            let mut rows = permute_three(
+                Token::Empty,
+                Token::Fixed("j".to_string()),
+                Token::Buckled { up: "k".to_string(), down: "l".to_string() },
+            );
+            rows.extend(permute_three(
+                Token::Empty,
+                Token::Fixed("j".to_string()),
+                Token::Buckled { up: "l".to_string(), down: "k".to_string() },
+            ));
+            rows
+        }
+        // Janus1T: 12 permutations of [*j, +k, -l] and [*j, -k, +l].
+        JamOption::Janus1T => {
+            let mut rows = permute_three(
+                Token::Fixed("j".to_string()),
+                Token::Up("k".to_string()),
+                Token::Down("l".to_string()),
+            );
+            rows.extend(permute_three(
+                Token::Fixed("j".to_string()),
+                Token::Down("k".to_string()),
+                Token::Up("l".to_string()),
+            ));
+            rows
+        }
     }
 }
 
@@ -147,6 +176,9 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
         assert_eq!(all_rows(JamOption::BU).len(), 6);
         assert_eq!(all_rows(JamOption::BBU).len(), 12);
         assert_eq!(all_rows(JamOption::OneH).len(), 6);
+        assert_eq!(all_rows(JamOption::OneT).len(), 6);
+        assert_eq!(all_rows(JamOption::Janus1H).len(), 12);
+        assert_eq!(all_rows(JamOption::Janus1T).len(), 12);
     }
     
     #[test]
@@ -299,7 +331,67 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
             assert_eq!(f_a, fiber_set(&ga), "BBU fiber mismatch for g={:?}", g);
         }
     }
+    #[test]
+    fn augment_to_one_t_counts() {
+        // Paper 3, Table 4: OneT has the BPL/BU count (q=6).
+        let expected = [(2, 5), (3, 21), (4, 120), (5, 666), (6, 3960)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::OneT);
+            assert_eq!(classes.len(), count, "OneT n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_janus1h_counts() {
+        // Paper 3, Table 4: Janus1H has the BBU count (q=12).
+        let expected = [(2, 16), (3, 144), (4, 1776), (5, 20736)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::Janus1H);
+            assert_eq!(classes.len(), count, "Janus1H n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_janus1t_counts() {
+        // Paper 3, Table 4: Janus1T has the BBU count (q=12).
+        let expected = [(2, 16), (3, 144), (4, 1776), (5, 20736)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::Janus1T);
+            assert_eq!(classes.len(), count, "Janus1T n={}", n);
+        }
+    }
+
+    #[test]
+    fn fiber_theorem1_one_t() {
+        let chain = JamChain::parse("*j+k-k/+k*j-k", JamOption::OneT).unwrap();
+        let f_a = fiber_set(&chain);
+        for g in Group::elements() {
+            let ga = Group::apply(g, &chain);
+            assert_eq!(f_a, fiber_set(&ga), "OneT fiber mismatch for g={:?}", g);
+        }
+    }
+
+    #[test]
+    fn fiber_theorem1_janus1h() {
+        let chain = JamChain::parse("+0*j(+k-l)/*j+0(-k+l)", JamOption::Janus1H).unwrap();
+        let f_a = fiber_set(&chain);
+        for g in Group::elements() {
+            let ga = Group::apply(g, &chain);
+            assert_eq!(f_a, fiber_set(&ga), "Janus1H fiber mismatch for g={:?}", g);
+        }
+    }
+
+    #[test]
+    fn fiber_theorem1_janus1t() {
+        let chain = JamChain::parse("*j+k-l/*j-l+k", JamOption::Janus1T).unwrap();
+        let f_a = fiber_set(&chain);
+        for g in Group::elements() {
+            let ga = Group::apply(g, &chain);
+            assert_eq!(f_a, fiber_set(&ga), "Janus1T fiber mismatch for g={:?}", g);
+        }
+    }
 }
+
 /// Canonical augmentation to level `n` (Paper 3, Theorem 2).
 ///
 /// Starts from `all_rows(option)` at level 1, then iterates
