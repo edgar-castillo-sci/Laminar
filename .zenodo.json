@@ -1,31 +1,39 @@
 {
-  "title": "Laminar: A high-performance Rust suite for JAM layered materials",
-  "description": "Specification and architectural design for Laminar, a Rust workspace for the generation, filtering, and analysis of honeycomb layered materials. This v0.0.1 release defines the crate structure, API stubs for canonical filtering (canonJAMr) and canonical augmentation (caugJAMr), and the roadmap for future implementation.",
+  "title": "Laminar: Infrastructure for laminar stacking (default: honeycomb symmetry, JAM notation)",
+  "description": "Laminar is a Rust workspace for generating, canonicalizing, classifying, and sampling stacking configurations of layered materials. The default (and only) instantiation in v0.1 targets honeycomb layers (G = S3 x Z/2) with JAM notation; the architecture supports additional symmetry modules and notations via the StackingMode trait. v0.1.0-alpha.5 includes: O(k) canonicalization (Theorem 3 of Orbits as Multisets), canonical augmentation (Theorem 2 of Growing as Pruning), word-based cell classification (PP/Pp/pP/Ap, Stacking as Words), CLI (sandwich, compare, modules), Python bindings (PyO3), CIF export, and pymatgen external validation (12/12 cases). 138 tests (121 Rust + 17 Python).",
   "creators": [
     {
-      "name": "Castillo, Edgar",
+      "name": "Castillo, Edgar R. H.",
       "orcid": "0009-0006-4268-3323",
       "affiliation": "Independent Researcher",
       "type": "Author"
     }
   ],
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.5",
   "access_right": "open",
   "upload_type": "software",
   "license": "MIT",
   "language": "eng",
   "keywords": [
-    "Rust",
-    "JAM",
-    "materials science",
+    "laminar stacking",
+    "stacking sequences",
+    "honeycomb",
+    "jam notation",
+    "2d materials",
+    "layered materials",
     "canonical augmentation",
-    "high-performance computing",
-    "specification"
+    "canonical form",
+    "symmetry reduction",
+    "isomorph-free generation",
+    "crystallography",
+    "polymorphs",
+    "rust",
+    "python"
   ],
   "related_identifiers": [
     {
-      "identifier": "10.5281/zenodo.23471387",
-      "relation": "references",
+      "identifier": "10.5281/zenodo.23628779",
+      "relation": "isNewVersionOf",
       "resource_type": "software",
       "scheme": "doi"
     },
@@ -34,6 +42,24 @@
       "relation": "references",
       "resource_type": "publication-article",
       "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23720668",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23721460",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/edgar-castillo-sci/Laminar",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
     }
   ]
 }

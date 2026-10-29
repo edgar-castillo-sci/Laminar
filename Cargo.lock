@@ -445,7 +445,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-cli"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -461,7 +461,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-core"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "criterion",
  "rand",
@@ -470,7 +470,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-io"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "laminar-core",
  "serde",
@@ -480,7 +480,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-markov"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "laminar-core",
  "rand",
@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-py"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "laminar-core",
  "laminar-io",
@@ -497,7 +497,7 @@ dependencies = [
 
 [[package]]
 name = "laminar-skeleton"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 dependencies = [
  "laminar-core",
  "laminar-io",

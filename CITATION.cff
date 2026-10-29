@@ -1,31 +1,73 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If you use this software, please cite this repository."
+type: software
+title: "Laminar: Infrastructure for laminar stacking (default: honeycomb symmetry, JAM notation)"
+abstract: >
+  Laminar is a Rust workspace for generating, canonicalizing, classifying,
+  and sampling stacking configurations of layered materials. The default
+  (and only) instantiation in v0.1 targets honeycomb layers
+  (G = S3 x Z/2) with JAM notation; the architecture supports additional
+  symmetry modules and notations via the StackingMode trait. Features:
+  O(k) canonicalization (Theorem 3 of *Orbits as Multisets*), canonical
+  augmentation (Theorem 2 of *Growing as Pruning*), word-based cell
+  classification (PP/Pp/pP/Ap, *Stacking as Words*), CLI (sandwich,
+  compare, modules), Python bindings (PyO3), and CIF export.
 authors:
   - family-names: Castillo
-    given-names: Edgar
+    given-names: Edgar R. H.
     orcid: "https://orcid.org/0009-0006-4268-3323"
     affiliation: "Independent Researcher"
-title: "Laminar: A high-performance Rust suite for JAM layered materials"
-version: 0.0.1
-doi: 10.5281/zenodo.23628779
-date-released: 2026-10-24
+version: 0.1.0-alpha.5
+date-released: 2026-10-28
 license: "MIT OR Apache-2.0"
 repository-code: "https://github.com/edgar-castillo-sci/Laminar"
+url: "https://github.com/edgar-castillo-sci/Laminar"
 keywords:
-  - JAM
-  - canonicalization
-  - canonical augmentation
-  - symmetry
-  - 2D materials
+  - laminar stacking
+  - stacking sequences
   - honeycomb
-  - Rust
-  - algorithmic complexity
+  - jam notation
+  - 2d materials
+  - layered materials
+  - canonical augmentation
+  - canonical form
+  - symmetry reduction
+  - isomorph-free generation
+  - crystallography
+  - polymorphs
+  - rust
+  - python
 references:
   - type: software
     title: "canonJAM: Canonicalization of JAM strings for duplicate detection"
     authors:
       - family-names: Castillo
-        given-names: Edgar
-    version: 1.1.0
-    doi: 10.5281/zenodo.23471387
+        given-names: Edgar R. H.
+    version: 1.2.1
+    doi: 10.5281/zenodo.23720668
     year: 2026
+  - type: software
+    title: "caugJAM: Canonical augmentation for JAM string generation"
+    authors:
+      - family-names: Castillo
+        given-names: Edgar R. H.
+    version: 0.1.0
+    doi: 10.5281/zenodo.23721460
+    year: 2026
+  - type: article
+    title: "Joining and arrangement of multilayers: A string representation for honeycomb layered materials"
+    authors:
+      - family-names: Arcudia
+        given-names: Jessica
+      - family-names: Ortiz-Chi
+        given-names: Filiberto
+      - family-names: Sanchez-Valenzuela
+        given-names: Adolfo
+      - family-names: Aspuru-Guzik
+        given-names: Alan
+      - family-names: Merino
+        given-names: Gabriel
+    journal: Matter
+    volume: 6
+    year: 2023
+    doi: 10.1016/j.matt.2023.02.014

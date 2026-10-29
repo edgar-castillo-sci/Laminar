@@ -10,6 +10,17 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ---
 
+## v0.1.0-alpha.5 — 2026-10-28 — CLI + Python + validation
+
+CLI (`sandwich`, `compare`, `modules`), config loading, Python bindings,
+and external validation against pymatgen. Fase 1B is complete at
+`v0.1.0-alpha.4` (see below).
+
+**Highlights:**
+- 121 Rust tests + 17 Python tests = 138 total.
+- Parity vs Papers 1 and 3: 37/37 counts.
+- pymatgen external validation: 12/12 cases, no over-counting.
+- 8/8 JAM options, CLI + Python bindings.
 
 ## v0.1.0-alpha.5 — in development (Fase 2)
 
