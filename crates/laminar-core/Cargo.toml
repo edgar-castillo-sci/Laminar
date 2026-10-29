@@ -15,4 +15,17 @@ cells = []
 smallvec = "1.13"
 
 [dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
 rand = "0.8"
+
+[[bench]]
+name = "canon"
+harness = false
+
+[[bench]]
+name = "children"
+harness = false
+
+[[bench]]
+name = "augment"
+harness = false

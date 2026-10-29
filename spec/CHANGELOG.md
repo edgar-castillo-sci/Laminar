@@ -10,6 +10,24 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ---
 
+### Fase 1A.6 — ReferenceCell V1-V5 + CIF tests
+
+**Added**
+- `ReferenceCellError::V2a`: symmetric buckled pairs (up == down) must
+  have |z_up| == |z_down|.
+- 10 tests in `reference_cell.rs` (V1, V2, V2a, V4, missing species).
+- 4 tests in `cif.rs` (OneH MoS₂, PL monoelemental, BU buckled,
+  invalid cell rejection). `count_atoms` verifies stoichiometry.
+- `scripts/validate_cif.py`: external validation with pymatgen / ASE.
+
+**Open**
+- **D8:** `pl_cell` uses `z_up = 0.01` (not 0.0) to satisfy V4.
+  Physically, PL `Up` tokens are in-plane (z = 0). V4 may need
+  refinement (allow `z_up = 0` when the option is planar).
+  Deadline: Fase 1B.
+- Janus1H (option 7) and 1T (option 6) CIF tests: parser support
+  is Fase 1B.
+  
 ### Fase 1A.5 — augment_to + parity vs paper tables
 
 **Added**
