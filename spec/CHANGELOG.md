@@ -9,6 +9,21 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 `**BREAKING**` marker.
 
 ---
+
+### Fase 1A.5 — augment_to + parity vs paper tables
+
+**Added**
+- `children::augment_to(n, option)`: canonical augmentation (Paper 3, Thm 2).
+- `examples/count.rs`: `cargo run --example count -- <option> <n>`.
+- `experiments/parity_canonjam.py`: parity vs paper tables (15 counts).
+- 4 tests: `augment_to_{pl,bu,oneh}_counts` + `augment_to_classes_are_canonical`.
+
+**Fixed**
+- PL n=6: expected 66 (paper typo) → 70. Burnside:
+  (3^6 + 3^3 + 3 + 3·3^3)/12 = 70. Confirmed by exhaustive
+  `kappa_literal == kappa_fast` on all 729 PL chains at k=6.
+  See `docs/discrepancies.md`.
+
 ### Fase 1A.4 — children + fiber (Paper 3, Theorem 1)
 
 **Added**
