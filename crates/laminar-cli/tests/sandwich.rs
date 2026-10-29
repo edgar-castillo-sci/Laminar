@@ -123,3 +123,50 @@ fn cif_export_end_to_end() {
         .collect();
     assert_eq!(entries.len(), 5, "expected 5 CIF files, got {}", entries.len());
 }
+
+#[test]
+fn sandwich_json_count() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    let output = cmd
+        .args(["sandwich", "-n", "6", "--option", "PL", "-q", "--json"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["command"], "sandwich");
+    assert_eq!(json["option"], "PL");
+    assert_eq!(json["n"], 6);
+    assert_eq!(json["mode"], "count");
+    assert_eq!(json["count"], 70);
+    assert!(json["metadata"]["laminar_version"].is_string());
+}
+
+#[test]
+fn sandwich_json_stdout() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    let output = cmd
+        .args(["sandwich", "-n", "2", "--option", "PL", "-e", "stdout", "--json"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["mode"], "stdout");
+    assert_eq!(json["count"], 2);
+    assert_eq!(json["chains"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn sandwich_verbose_stderr() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    let output = cmd
+        .args(["sandwich", "-n", "2", "--option", "PL", "-e", "stdout", "-v"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("symmetry=honeycomb"),
+        "expected 'symmetry=honeycomb' in stderr, got: {}",
+        stderr
+    );
+}

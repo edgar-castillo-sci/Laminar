@@ -1,11 +1,6 @@
 //! Laminar CLI.
-//!
-//! Commands:
-//! - `sandwich`: generate, export, and count JAM stacking configurations.
-//! - `compare`: check equivalence between chains.
-//! - `sample`: (Fase 7) MCMC sampling.
-//! - `modules`: (Fase 3) list available modules.
 
+mod common;
 mod compare;
 mod sandwich;
 

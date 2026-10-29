@@ -18,6 +18,29 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 CLI (`sandwich`, `compare`) and Python bindings. Fase 1B is complete at
 `v0.1.0-alpha.4` (see below).
 
+### Fase 2c — JSON, quiet, verbose
+
+**Added**
+- `--json` on `sandwich` and `compare`: stable JSON schema to stdout.
+  - `sandwich --json`: `{command, option, n, mode, count, chains?,
+    files?, output_dir?, metadata}`.
+  - `compare --json`: `{command, option, equivalent, canonical_keys,
+    orbits, metadata}`.
+- `-q/--quiet` on `compare`: prints `true` or `false`, exits 1 if
+  not equivalent (shell-friendly).
+- `-v/--verbose` on both: extra stderr diagnostics (symmetry, notation,
+  version).
+- `crates/laminar-cli/src/common.rs`: shared `Metadata` struct.
+- `serde = { derive }` + `serde_json` as deps in `laminar-cli`.
+- 6 new tests (3 sandwich, 3 compare), including exit-code check for
+  `compare -q`.
+
+**Verified**
+- `laminar sandwich -n 6 --option PL -q --json | jq .count` → 70.
+- `laminar compare A B --option PL -q` → `true`, exit 0.
+- `laminar compare A B' --option PL -q` → `false`, exit 1.
+- 115 tests total.
+
 ### Fase 2b — `compare` CLI
 
 **Added**

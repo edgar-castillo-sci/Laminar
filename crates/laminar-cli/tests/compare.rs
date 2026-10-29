@@ -107,3 +107,38 @@ fn compare_empty_fails() {
         .failure()
         .stderr(predicates::str::contains("no chains to compare"));
 }
+
+#[test]
+fn compare_json() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    let output = cmd
+        .args(["compare", "+0+j+j", "+j+0+j", "--option", "PL", "--json"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["command"], "compare");
+    assert_eq!(json["option"], "PL");
+    assert_eq!(json["equivalent"], true);
+    assert_eq!(json["canonical_keys"]["+0+j+j"], "+0+j+j");
+    assert_eq!(json["canonical_keys"]["+j+0+j"], "+0+j+j");
+    assert_eq!(json["orbits"]["+0+j+j"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn compare_quiet_equivalent() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    cmd.args(["compare", "+0+j+j", "+j+0+j", "--option", "PL", "-q"])
+        .assert()
+        .success()
+        .stdout("true\n");
+}
+
+#[test]
+fn compare_quiet_not_equivalent_exit_1() {
+    let mut cmd = Command::cargo_bin("laminar").unwrap();
+    cmd.args(["compare", "+0+j+j/+j+0+j", "+0+j+j/+0+j+j", "--option", "PL", "-q"])
+        .assert()
+        .code(1)
+        .stdout("false\n");
+}

@@ -444,6 +444,8 @@ dependencies = [
  "laminar-io",
  "laminar-markov",
  "predicates",
+ "serde",
+ "serde_json",
  "tempfile",
  "toml",
 ]
