@@ -13,7 +13,7 @@ of the founder.
 
 ## Founder
 
-**Edgar Ramón Hernández Castillo** — founder, lead maintainer, copyright
+**Edgar Castillo** — founder, lead maintainer, copyright
 holder of the original codebase, and owner of the Laminar name.
 
 ## Scope
@@ -38,7 +38,7 @@ governed solely by the founder.
 
 ## Roles
 
-- **Founder / Maintainer**: Edgar Ramón Hernández Castillo. Final authority
+- **Founder / Maintainer**: Edgar Castillo. Final authority
   on all decisions.
 - **Contributors**: anyone whose contribution has been merged.
 - **Users**: anyone using the software under MIT/Apache-2.0.

@@ -13,7 +13,7 @@ members = [
 version = "0.1.0-alpha.5"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-authors = ["Edgar R. H. Castillo <edgar.castillo.sci@gmail.com>"]
+authors = ["Edgar Castillo <edgar.castillo.sci@gmail.com>"]
 repository = "https://github.com/edgar-castillo-sci/Laminar"
 
 [workspace.dependencies]

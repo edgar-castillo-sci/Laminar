@@ -14,7 +14,7 @@ abstract: >
   compare, modules), Python bindings (PyO3), and CIF export.
 authors:
   - family-names: Castillo
-    given-names: Edgar R. H.
+    given-names: Edgar
     orcid: "https://orcid.org/0009-0006-4268-3323"
     affiliation: "Independent Researcher"
 version: 0.1.0-alpha.5
@@ -42,7 +42,7 @@ references:
     title: "canonJAM: Canonicalization of JAM strings for duplicate detection"
     authors:
       - family-names: Castillo
-        given-names: Edgar R. H.
+        given-names: Edgar
     version: 1.2.1
     doi: 10.5281/zenodo.23720668
     year: 2026
@@ -50,7 +50,7 @@ references:
     title: "caugJAM: Canonical augmentation for JAM string generation"
     authors:
       - family-names: Castillo
-        given-names: Edgar R. H.
+        given-names: Edgar
     version: 0.1.0
     doi: 10.5281/zenodo.23721460
     year: 2026

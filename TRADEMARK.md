@@ -1,7 +1,7 @@
 # Trademark policy
 
 The name **Laminar** and any associated logos are trademarks of
-**Edgar Ramón Hernández Castillo**.
+**Edgar Castillo**.
 
 ## What you can do
 

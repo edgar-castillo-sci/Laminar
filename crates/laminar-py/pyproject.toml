@@ -9,7 +9,7 @@ description = "Python bindings for Laminar: stacking sequences in honeycomb laye
 requires-python = ">=3.10"
 license = { text = "MIT OR Apache-2.0" }
 authors = [
-    { name = "Edgar R. H. Castillo", email = "edgar.castillo.sci@gmail.com" }
+    { name = "Edgar Castillo", email = "edgar.castillo.sci@gmail.com" }
 ]
 classifiers = [
     "Programming Language :: Rust",

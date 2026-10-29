@@ -3,7 +3,7 @@
   "description": "Laminar is a Rust workspace for generating, canonicalizing, classifying, and sampling stacking configurations of layered materials. The default (and only) instantiation in v0.1 targets honeycomb layers (G = S3 x Z/2) with JAM notation; the architecture supports additional symmetry modules and notations via the StackingMode trait. v0.1.0-alpha.5 includes: O(k) canonicalization (Theorem 3 of Orbits as Multisets), canonical augmentation (Theorem 2 of Growing as Pruning), word-based cell classification (PP/Pp/pP/Ap, Stacking as Words), CLI (sandwich, compare, modules), Python bindings (PyO3), CIF export, and pymatgen external validation (12/12 cases). 138 tests (121 Rust + 17 Python).",
   "creators": [
     {
-      "name": "Castillo, Edgar R. H.",
+      "name": "Castillo, Edgar",
       "orcid": "0009-0006-4268-3323",
       "affiliation": "Independent Researcher",
       "type": "Author"
