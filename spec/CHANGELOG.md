@@ -3,7 +3,7 @@
 All notable changes to Laminar are documented here.
 
 The project is in **alpha** (`0.1.0-alpha.N`). The strict semver policy
-of `spec/v0.1.0-alpha.1.md` §0 applies from `0.2.0-beta.1` onwards.
+of `README.md` applies from `0.2.0-beta.1` onwards.
 During alpha, public-type changes bump the alpha tag (e.g.,
 `0.1.0-alpha.1` → `0.1.0-alpha.2`) and are recorded here with a
 `**BREAKING**` marker.
