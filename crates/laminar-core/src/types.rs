@@ -300,6 +300,35 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
             }
             Ok(())
         }
+        // BPL (2): all distinct permutations of [+0, +j, +k].
+        //   Row = 1×Empty + 2×Up, both Up with DIFFERENT letters.
+        JamOption::BPL => {
+            let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
+            let ups: Vec<&String> = row
+                .iter()
+                .filter_map(|t| match t {
+                    Token::Up(x) => Some(x),
+                    _ => None,
+                })
+                .collect();
+            if empties != 1 || ups.len() != 2 {
+                return Err(ParseError::InvalidRowForOption {
+                    row: idx,
+                    option,
+                    expected: "1×Empty, 2×Up(different letters)",
+                    got: describe_row(row),
+                });
+            }
+            if ups[0] == ups[1] {
+                return Err(ParseError::MismatchedLetters {
+                    row: idx,
+                    option,
+                    first: ups[0].clone(),
+                    second: ups[1].clone(),
+                });
+            }
+            Ok(())
+        }
         // BU (3): all distinct permutations of [+0, +j, -j].
         //   Row = 1×Empty + 1×Up + 1×Down, Up and Down with the SAME letter.
         JamOption::BU => {
@@ -328,8 +357,37 @@ fn validate_row(row: &[Token; 3], option: JamOption, idx: usize) -> Result<(), P
                 }),
             }
         }
+        // BBU (4): all distinct permutations of [+0, +j, -k] and [+0, -j, +k].
+        //   Row = 1×Empty + 1×Up + 1×Down, Up and Down with DIFFERENT letters.
+        //   Both orientations (up-then-down, down-then-up) are the same row set,
+        //   since permutations already cover them.
+        JamOption::BBU => {
+            let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
+            let up = row.iter().find_map(|t| match t {
+                Token::Up(x) => Some(x),
+                _ => None,
+            });
+            let down = row.iter().find_map(|t| match t {
+                Token::Down(x) => Some(x),
+                _ => None,
+            });
+            match (empties, up, down) {
+                (1, Some(u), Some(d)) if u != d => Ok(()),
+                (1, Some(u), Some(d)) => Err(ParseError::MismatchedLetters {
+                    row: idx,
+                    option,
+                    first: u.clone(),
+                    second: d.clone(),
+                }),
+                _ => Err(ParseError::InvalidRowForOption {
+                    row: idx,
+                    option,
+                    expected: "1×Empty, 1×Up, 1×Down(different letters)",
+                    got: describe_row(row),
+                }),
+            }
+        }
         // OneH (5): all distinct permutations of [+0, +j, (+k-k)].
-        //   Row = 1×Empty + 1×Up + 1×Buckled, Buckled.up == Buckled.down.
         JamOption::OneH => {
             let empties = row.iter().filter(|t| matches!(t, Token::Empty)).count();
             let ups = row.iter().filter(|t| matches!(t, Token::Up(_))).count();
@@ -546,5 +604,68 @@ mod tests {
         let chain = JamChain::from_rows(rows, JamOption::PL);
         assert_eq!(chain.k(), 2);
         assert_eq!(chain.raw(), "+j+0+j/+0+j+j");
+    }
+    #[test]
+    fn parse_bpl_rows() {
+        for s in [
+            "+0+j+k", "+0+k+j", "+j+0+k", "+j+k+0", "+k+0+j", "+k+j+0",
+        ] {
+            let chain = JamChain::parse(s, JamOption::BPL).unwrap();
+            assert_eq!(chain.k(), 1);
+            assert_eq!(chain.raw(), s);
+        }
+    }
+
+    #[test]
+    fn parse_bpl_rejects_same_letters() {
+        // PL-style row in BPL: 2 Up with the SAME letter → rejected.
+        let err = JamChain::parse("+0+j+j", JamOption::BPL).unwrap_err();
+        assert!(
+            matches!(err, ParseError::MismatchedLetters { .. }),
+            "expected MismatchedLetters, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_bpl_rejects_down_token() {
+        let err = JamChain::parse("+0+j-k", JamOption::BPL).unwrap_err();
+        assert!(matches!(err, ParseError::InvalidRowForOption { .. }));
+    }
+
+    #[test]
+    fn parse_bbu_rows() {
+        for s in [
+            "+0+j-k", "+0-k+j", "+j+0-k", "+j-k+0", "-k+0+j", "-k+j+0",
+            "+0-j+k", "+0+k-j", "-j+0+k", "-j+k+0", "+k+0-j", "+k-j+0",
+        ] {
+            let chain = JamChain::parse(s, JamOption::BBU).unwrap();
+            assert_eq!(chain.k(), 1);
+        }
+    }
+
+    #[test]
+    fn parse_bbu_rejects_same_letters() {
+        // BU-style row in BBU: Up and Down with the SAME letter → rejected.
+        let err = JamChain::parse("+0+j-j", JamOption::BBU).unwrap_err();
+        assert!(
+            matches!(err, ParseError::MismatchedLetters { .. }),
+            "expected MismatchedLetters, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_bbu_accepts_both_orientations() {
+        // Both [+0, +j, -k] and [+0, -j, +k] are valid BBU rows.
+        assert!(JamChain::parse("+0+j-k", JamOption::BBU).is_ok());
+        assert!(JamChain::parse("+0-j+k", JamOption::BBU).is_ok());
+    }
+
+    #[test]
+    fn parse_bbu_rejects_buckled() {
+        // Buckled tokens are not allowed in BBU.
+        let err = JamChain::parse("+0+j(+k-k)", JamOption::BBU).unwrap_err();
+        assert!(matches!(err, ParseError::InvalidRowForOption { .. }));
     }
 }

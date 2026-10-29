@@ -10,6 +10,37 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ---
 
+### Fase 1A.7 — Criterion benchmarks
+
+**Added**
+- `benches/{canon,children,augment}.rs` (Criterion 0.5, `html_reports`).
+- `scripts/bench.sh`.
+- `docs/benchmarks.md` with measured results.
+
+**Measured** (AMD Ryzen 5 4600H, release)
+- κ_fast speedup vs κ_literal: **4.63–5.27×** (theoretical 6×).
+- fiber vs children ratio: **7.88–8.74×**.
+- augment_to n=3→4 growth: 3.16× (PL), 5.71× (BU), 5.61× (OneH).
+
+---
+
+## Fase 1A — complete
+
+| Sub-fase | Delivered |
+|---|---|
+| 1A.1 | Parser PL/BU/OneH |
+| 1A.2 | kappa_fast (Theorem 3) + col-major |
+| 1A.3 | word-based cells (S3-pal) |
+| 1A.4 | children + fiber (Theorem 1) |
+| 1A.5 | augment_to + parity (15 counts) |
+| 1A.6 | ReferenceCell V1–V5 + CIF |
+| 1A.7 | Criterion benchmarks |
+
+**57 tests** (41 core + 14 io + 2 e2e), **0 failures**.
+**Parity:** all 15 counts match Paper 1 Table 3 (PL n=6 corrected to 70)
+and Paper 3 Table 4.
+**Perf:** κ_fast 4.63–5.27× faster than κ_literal.
+
 ### Fase 1A.6 — ReferenceCell V1-V5 + CIF tests
 
 **Added**

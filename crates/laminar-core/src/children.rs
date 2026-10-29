@@ -28,10 +28,30 @@ pub fn all_rows(option: JamOption) -> Vec<[Token; 3]> {
                 [Token::Up(j.clone()), Token::Up(j.clone()), Token::Empty],
             ]
         }
+        // BPL: all distinct permutations of [+0, +j, +k] → 6 rows.
+        JamOption::BPL => permute_three(
+            Token::Empty,
+            Token::Up("j".to_string()),
+            Token::Up("k".to_string()),
+        ),
         // BU: all distinct permutations of [+0, +j, -j] → 6 rows.
         JamOption::BU => {
             let j = "j".to_string();
             permute_three(Token::Empty, Token::Up(j.clone()), Token::Down(j))
+        }
+        // BBU: all distinct permutations of [+0, +j, -k] and [+0, -j, +k] → 12 rows.
+        JamOption::BBU => {
+            let mut rows = permute_three(
+                Token::Empty,
+                Token::Up("j".to_string()),
+                Token::Down("k".to_string()),
+            );
+            rows.extend(permute_three(
+                Token::Empty,
+                Token::Down("j".to_string()),
+                Token::Up("k".to_string()),
+            ));
+            rows
         }
         // OneH: all distinct permutations of [+0, +j, (+k-k)] → 6 rows.
         JamOption::OneH => {
@@ -46,7 +66,7 @@ pub fn all_rows(option: JamOption) -> Vec<[Token; 3]> {
             )
         }
         other => unimplemented!(
-            "all_rows not implemented for {:?} (Fase 1B: BPL, BBU, OneT, Janus1H, Janus1T)",
+            "all_rows not implemented for {:?} (Fase 1B.2: OneT, Janus1H, Janus1T)",
             other
         ),
     }
@@ -123,10 +143,12 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
     #[test]
     fn all_rows_count() {
         assert_eq!(all_rows(JamOption::PL).len(), 3);
+        assert_eq!(all_rows(JamOption::BPL).len(), 6);
         assert_eq!(all_rows(JamOption::BU).len(), 6);
+        assert_eq!(all_rows(JamOption::BBU).len(), 12);
         assert_eq!(all_rows(JamOption::OneH).len(), 6);
     }
-
+    
     #[test]
     fn prepend_and_append() {
         let chain = JamChain::parse("+0+j+j", JamOption::PL).unwrap();
@@ -236,6 +258,45 @@ pub fn fiber(chain: &JamChain) -> Vec<JamChain> {
                     }
                 }
             }
+        }
+    }
+    #[test]
+    fn augment_to_bpl_counts() {
+        // Paper 1, Table 3: BPL counts for n = 2..6 (same as BU, q=6).
+        let expected = [(2, 5), (3, 21), (4, 120), (5, 666), (6, 3960)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::BPL);
+            assert_eq!(classes.len(), count, "BPL n={}", n);
+        }
+    }
+
+    #[test]
+    fn augment_to_bbu_counts() {
+        // Paper 1, Table 3: BBU counts for n = 2..5 (q=12).
+        let expected = [(2, 16), (3, 144), (4, 1776), (5, 20736)];
+        for (n, count) in expected {
+            let classes = augment_to(n, JamOption::BBU);
+            assert_eq!(classes.len(), count, "BBU n={}", n);
+        }
+    }
+
+    #[test]
+    fn fiber_theorem1_bpl() {
+        let chain = JamChain::parse("+0+j+k/+j+0+k", JamOption::BPL).unwrap();
+        let f_a = fiber_set(&chain);
+        for g in Group::elements() {
+            let ga = Group::apply(g, &chain);
+            assert_eq!(f_a, fiber_set(&ga), "BPL fiber mismatch for g={:?}", g);
+        }
+    }
+
+    #[test]
+    fn fiber_theorem1_bbu() {
+        let chain = JamChain::parse("+0+j-k/+j-k+0", JamOption::BBU).unwrap();
+        let f_a = fiber_set(&chain);
+        for g in Group::elements() {
+            let ga = Group::apply(g, &chain);
+            assert_eq!(f_a, fiber_set(&ga), "BBU fiber mismatch for g={:?}", g);
         }
     }
 }

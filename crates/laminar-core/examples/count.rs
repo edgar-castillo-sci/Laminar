@@ -19,7 +19,9 @@ fn main() {
     }
     let option = match args[1].as_str() {
         "PL" => JamOption::PL,
+        "BPL" => JamOption::BPL,
         "BU" => JamOption::BU,
+        "BBU" => JamOption::BBU,
         "OneH" => JamOption::OneH,
         other => {
             eprintln!("unknown option: {}", other);

@@ -30,7 +30,9 @@ BIN = REPO_ROOT / "target" / "release" / "examples" / "count"
 # We treat 70 as correct; see docs/discrepancies.md for details.
 EXPECTED = {
     "PL":   {2: 2, 3: 4, 4: 10, 5: 25, 6: 70},
+    "BPL":  {2: 5, 3: 21, 4: 120, 5: 666, 6: 3960},
     "BU":   {2: 5, 3: 21, 4: 120, 5: 666, 6: 3960},
+    "BBU":  {2: 16, 3: 144, 4: 1776, 5: 20736},
     "OneH": {2: 5, 3: 21, 4: 120, 5: 666, 6: 3960},
 }
 
