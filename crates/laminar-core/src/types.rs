@@ -445,3 +445,106 @@ impl fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_mos2_bilayer() {
+        let chain = JamChain::parse("+j+0(+k-k)/+j+0(+k-k)", JamOption::OneH).unwrap();
+        assert_eq!(chain.k(), 2);
+        assert_eq!(chain.raw(), "+j+0(+k-k)/+j+0(+k-k)");
+    }
+
+    #[test]
+    fn parse_rejects_janus_token_in_oneh() {
+        let err = JamChain::parse("+j+0(+k-l)/+j+0(+k-l)", JamOption::OneH).unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::Row { .. } | ParseError::JanusTokenInOneH { .. }
+        ));
+    }
+
+    #[test]
+    fn parse_rejects_wrong_row_length() {
+        let err = JamChain::parse("+j+0/+j+0", JamOption::OneH).unwrap_err();
+        assert!(matches!(err, ParseError::Row { .. }));
+    }
+
+    #[test]
+    fn token_order_matches_paper() {
+        assert!(
+            Token::Fixed("j".into())
+                < Token::Buckled { up: "k".into(), down: "k".into() }
+        );
+        assert!(Token::Buckled { up: "k".into(), down: "k".into() } < Token::Empty);
+        assert!(Token::Empty < Token::Up("j".into()));
+        assert!(Token::Up("j".into()) < Token::Down("j".into()));
+    }
+
+    #[test]
+    fn parse_pl_rows() {
+        for s in ["+0+j+j", "+j+0+j", "+j+j+0"] {
+            let chain = JamChain::parse(s, JamOption::PL).unwrap();
+            assert_eq!(chain.k(), 1);
+            assert_eq!(chain.raw(), s);
+        }
+    }
+
+    #[test]
+    fn parse_pl_rejects_mismatched_letters() {
+        let err = JamChain::parse("+j+0+k", JamOption::PL).unwrap_err();
+        assert!(
+            matches!(err, ParseError::MismatchedLetters { .. }),
+            "expected MismatchedLetters, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_pl_rejects_down_token() {
+        let err = JamChain::parse("+j+0-j", JamOption::PL).unwrap_err();
+        assert!(
+            matches!(err, ParseError::InvalidRowForOption { .. }),
+            "expected InvalidRowForOption, got {:?}",
+            err
+        );
+    }
+
+    #[test]
+    fn parse_bu_rows() {
+        for s in ["+0+j-j", "+j+0-j", "+j-j+0", "-j+0+j"] {
+            let chain = JamChain::parse(s, JamOption::BU).unwrap();
+            assert_eq!(chain.k(), 1);
+        }
+    }
+
+    #[test]
+    fn parse_bu_rejects_mismatched_letters() {
+        let err = JamChain::parse("+j+0-k", JamOption::BU).unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::Row { .. } | ParseError::MismatchedLetters { .. }
+        ));
+    }
+
+    #[test]
+    fn parse_oneh_rows() {
+        for s in ["+0+j(+k-k)", "+j+0(+k-k)", "(+k-k)+j+0"] {
+            let chain = JamChain::parse(s, JamOption::OneH).unwrap();
+            assert_eq!(chain.k(), 1);
+        }
+    }
+
+    #[test]
+    fn from_rows_constructs_chain() {
+        let rows = vec![
+            [Token::Up("j".into()), Token::Empty, Token::Up("j".into())],
+            [Token::Empty, Token::Up("j".into()), Token::Up("j".into())],
+        ];
+        let chain = JamChain::from_rows(rows, JamOption::PL);
+        assert_eq!(chain.k(), 2);
+        assert_eq!(chain.raw(), "+j+0+j/+0+j+j");
+    }
+}
