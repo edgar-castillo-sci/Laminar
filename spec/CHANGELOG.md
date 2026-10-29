@@ -18,6 +18,24 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 CLI (`sandwich`, `compare`) and Python bindings. Fase 1B is complete at
 `v0.1.0-alpha.4` (see below).
 
+### Fase 2b — `compare` CLI
+
+**Added**
+- `crates/laminar-cli/src/compare.rs`:
+  - `laminar compare <chain1> <chain2> ... [--option OPT]`: check
+    equivalence between positional chains.
+  - `laminar compare --file A.txt --file B.txt [--option OPT]`: read
+    chains from files (`#` comments ignored, empty lines skipped).
+  - Infers option from the chains if `--option` is not given.
+  - Output: `equivalent: true|false`, `canonical_keys`, `orbits`.
+- 7 integration tests in `crates/laminar-cli/tests/compare.rs`.
+
+**Verified**
+- `compare "+0+j+j" "+j+0+j" --option PL` → `equivalent: true`.
+- `compare "+0+j+j/+j+0+j" "+0+j+j/+0+j+j" --option PL` → `equivalent: false`.
+- `compare "+0*j(+k-k)" "*j+0(+k-k)" --option OneH` → `equivalent: true`.
+- 109 tests total.
+
 ### Fase 2a — `sandwich` CLI (basic)
 
 **Added**

@@ -2,10 +2,11 @@
 //!
 //! Commands:
 //! - `sandwich`: generate, export, and count JAM stacking configurations.
-//! - `compare`: (Fase 2b) check equivalence between chains.
+//! - `compare`: check equivalence between chains.
 //! - `sample`: (Fase 7) MCMC sampling.
 //! - `modules`: (Fase 3) list available modules.
 
+mod compare;
 mod sandwich;
 
 use clap::{Parser, Subcommand};
@@ -28,12 +29,15 @@ struct Cli {
 enum Commands {
     /// Generate and export JAM stacking configurations.
     Sandwich(sandwich::SandwichArgs),
+    /// Compare chains for equivalence.
+    Compare(compare::CompareArgs),
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = match cli.command {
         Commands::Sandwich(args) => sandwich::run(args),
+        Commands::Compare(args) => compare::run(args),
     };
     match result {
         Ok(()) => ExitCode::SUCCESS,
