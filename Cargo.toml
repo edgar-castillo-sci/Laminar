@@ -6,7 +6,7 @@ members = [
     "crates/laminar-markov",
     "crates/laminar-cli",
     "crates/skeleton",
-    # "crates/laminar-py",  # enable in v0.2.0 (requires PyO3)
+    "crates/laminar-py",
 ]
 
 [workspace.package]

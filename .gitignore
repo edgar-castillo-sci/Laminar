@@ -4,3 +4,10 @@
 **/*.rs.bk
 out/
 experiments/results/
+
+# Python bindings (Fase 4)
+crates/laminar-py/.venv/
+crates/laminar-py/.pytest_cache/
+crates/laminar-py/python/tests/__pycache__/
+**/__pycache__/
+*.pyc

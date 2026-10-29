@@ -1,19 +1,14 @@
-//! Core types and algorithms for JAM chains.
+//! Python bindings for Laminar (PyO3).
 //!
-//! Implements the theoretical kernel of Papers 1-3:
-//! - `types`: JamChain, Token, Option, Cell, Stabilizer
-//! - `group`: G = S3 × Z/2, action, orbits
-//! - `canon`: κ (Teorema 3 de *Orbits as Multisets*)
-//! - `cells`: PP/Pp/pP/Ap (Sección 3 de *Stacking as Words*)
+//! Build with:
+//!     cd crates/laminar-py
+//!     maturin develop --release
+//!
+//! The `python` feature gates all PyO3 code. It is off by default so
+//! `cargo build --workspace` does not require Python at build time.
 
-pub mod group;
-pub mod types;
+#[cfg(feature = "python")]
+mod bindings;
 
-#[cfg(feature = "canon")]
-pub mod canon;
-
-#[cfg(feature = "cells")]
-pub mod cells;
-
-pub use group::{Group, GroupElement, Perm3};
-pub use types::{Cell, JamChain, Option, ParseError, Stabilizer, Token};
+#[cfg(feature = "python")]
+pub use bindings::*;

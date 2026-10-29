@@ -1,0 +1,25 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "laminar"
+version = "0.1.0-alpha.4"
+description = "Python bindings for Laminar: stacking sequences in honeycomb layered materials"
+requires-python = ">=3.10"
+license = { text = "MIT OR Apache-2.0" }
+authors = [
+    { name = "Edgar R. H. Castillo", email = "edgar.castillo.sci@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Science/Research",
+]
+
+[project.urls]
+Homepage = "https://github.com/edgar-castillo-sci/Laminar"
+Repository = "https://github.com/edgar-castillo-sci/Laminar"
+
+[tool.maturin]
+features = ["python"]

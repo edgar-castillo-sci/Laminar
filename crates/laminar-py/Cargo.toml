@@ -1,15 +1,23 @@
 [package]
-name = "laminar-core"
+name = "laminar-py"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Core types and algorithms for JAM chains"
+description = "Python bindings for Laminar (PyO3)"
+
+[lib]
+name = "laminar"
+crate-type = ["cdylib"]
 
 [features]
-default = ["canon", "cells"]
-canon = []
-children = []
-cells = []
+default = []
+python = ["dep:pyo3"]
 
 [dependencies]
-smallvec = "1.13"
+laminar-core.workspace = true
+laminar-io.workspace = true
+
+[dependencies.pyo3]
+version = "0.22"
+optional = true
+features = ["extension-module"]
