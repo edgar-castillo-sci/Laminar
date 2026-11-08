@@ -1,8 +1,7 @@
 # Laminar
+[Read in English](README.md)
 
 Un workspace de Rust para la enumeración exacta, canonicalización, clasificación y exportación de configuraciones de apilamiento en materiales de capas hexagonales. Incluye CLI y bindings de Python.
-
-[Read in English](README.md)
 
 JAM es la notación; honeycomb es el módulo de simetría. Laminar usa JAM como notación por defecto y honeycomb como módulo de simetría por defecto (y, en v0.1, el único).
 
