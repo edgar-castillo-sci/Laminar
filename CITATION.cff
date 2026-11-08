@@ -16,6 +16,7 @@ authors:
     affiliation: "Independent Researcher"
 version: 0.1.0
 date-released: 2026-11-08
+doi: 10.5281/zenodo.24064345
 license: "AGPL-3.0-or-later"
 repository-code: "https://github.com/edgar-castillo-sci/Laminar"
 url: "https://github.com/edgar-castillo-sci/Laminar"
