@@ -10,6 +10,33 @@ During alpha, public-type changes bump the alpha tag (e.g.,
 
 ---
 
+## v0.1.0 — 2026-11-08 — First functional release (AGPL-3.0-or-later)
+
+**BREAKING (license):** Laminar is now licensed under the GNU Affero
+General Public License version 3 or later (`AGPL-3.0-or-later`),
+replacing the previous MIT OR Apache-2.0 dual license. The change is
+not retroactive: `v0.1.0-alpha.5` and earlier releases remain under
+their original licenses (already published). This release replaces
+the deleted `v0.1.0-alpha.5` snapshot with the current functional
+state under AGPL.
+
+**Summary:** the full core is implemented and validated:
+- Parser for all 8 JAM options (PL, BPL, BU, BBU, OneH, OneT, Janus1H, Janus1T).
+- O(k) canonicalization (constant 2, fast path).
+- Canonical augmentation (isomorph-free, one representative per orbit).
+- Structural cell classification (four cells, word-based).
+- ReferenceCell + CIF export.
+- CLI (`sandwich`, `compare`, `modules`) with config loading.
+- Python bindings (PyO3).
+- 138 tests (121 Rust + 17 Python), 0 failures.
+- Parity vs published tables: 37/37.
+- pymatgen external validation: 12/12 cases, no over-counting.
+
+**Open:** MCMC sampler (`laminar-markov` spec in `spec/mcmc_design.md`,
+implementation in progress), `sample` CLI, DFT case study.
+
+---
+
 ## v0.1.0-alpha.5 — 2026-10-28 — CLI + Python + validation
 
 CLI (`sandwich`, `compare`, `modules`), config loading, Python bindings,

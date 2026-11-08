@@ -13,7 +13,7 @@ By submitting a pull request, you certify that:
 
 1. The contribution was created in whole or in part by you, and you have
    the right to submit it under the project's license.
-2. The contribution is provided under the **MIT OR Apache-2.0** dual license.
+2. The contribution is provided under the **AGPL-3.0-or-later** dual license.
 3. You understand that the contribution will be publicly available and
    that the project's governance is founder-led.
 

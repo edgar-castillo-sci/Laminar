@@ -4,7 +4,7 @@ Python bindings for [Laminar](https://github.com/edgar-castillo-sci/Laminar),
 a Rust suite for generating, canonicalizing, and exporting stacking
 configurations of honeycomb layered materials.
 
-**Status:** alpha (`0.1.0-alpha.4`). API may change.
+**Status:** alpha (`0.1.0`). API may change.
 
 ## Installation (development)
 
@@ -175,5 +175,4 @@ pytest python/tests/ -v
 
 ## License
 
-Dual-licensed under MIT OR Apache-2.0. See `LICENSE-MIT` and
-`LICENSE-APACHE` at the repository root.
+Licensed under AGPL-3.0-or-later. See `LICENSE` at the repository root.

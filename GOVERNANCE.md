@@ -41,7 +41,7 @@ governed solely by the founder.
 - **Founder / Maintainer**: Edgar Castillo. Final authority
   on all decisions.
 - **Contributors**: anyone whose contribution has been merged.
-- **Users**: anyone using the software under MIT/Apache-2.0.
+- **Users**: anyone using the software under AGPL-3.0-or-later.
 
 ## Changing this document
 
@@ -56,8 +56,8 @@ governance remains with the founder.
 
 ## Licensing
 
-The code is dual-licensed under **MIT OR Apache-2.0**. Users may choose
-either license. See `LICENSE-MIT` and `LICENSE-APACHE`.
+The code is dual-licensed under **AGPL-3.0-or-later**. Users may choose
+either license. See `LICENSE`.
 
 The name **Laminar**, the logo, and any related marks are governed by
 `TRADEMARK.md`.

@@ -1,6 +1,6 @@
 {
   "title": "Laminar: Infrastructure for laminar stacking (default: honeycomb symmetry, JAM notation)",
-  "description": "Laminar is a Rust workspace for generating, canonicalizing, classifying, and sampling stacking configurations of layered materials. The default (and only) instantiation in v0.1 targets honeycomb layers (G = S3 x Z/2) with JAM notation; the architecture supports additional symmetry modules and notations via the StackingMode trait. v0.1.0-alpha.5 includes: O(k) canonicalization (Theorem 3 of Orbits as Multisets), canonical augmentation (Theorem 2 of Growing as Pruning), word-based cell classification (PP/Pp/pP/Ap, Stacking as Words), CLI (sandwich, compare, modules), Python bindings (PyO3), CIF export, and pymatgen external validation (12/12 cases). 138 tests (121 Rust + 17 Python).",
+  "description": "Laminar is a Rust workspace for the exact enumeration, canonicalization, classification, and export of stacking configurations in honeycomb layered materials. v0.1 implements the full core: parser for all 8 canonical JAM options, O(k) canonicalization (constant 2), canonical augmentation (isomorph-free, one representative per orbit), structural cell classification (four cells), ReferenceCell + CIF export, CLI (sandwich, compare, modules), Python bindings (PyO3), and config loading. Validated against published tables (37/37 counts) and against pymatgen (12/12 cases, no over-counting). 138 tests (121 Rust + 17 Python). Licensed under AGPL-3.0-or-later.",
   "creators": [
     {
       "name": "Castillo, Edgar",
@@ -9,10 +9,10 @@
       "type": "Author"
     }
   ],
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0",
   "access_right": "open",
   "upload_type": "software",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "language": "eng",
   "keywords": [
     "laminar stacking",
@@ -32,34 +32,16 @@
   ],
   "related_identifiers": [
     {
-      "identifier": "10.5281/zenodo.23628779",
-      "relation": "isNewVersionOf",
+      "identifier": "https://github.com/edgar-castillo-sci/Laminar",
+      "relation": "isSupplementTo",
       "resource_type": "software",
-      "scheme": "doi"
+      "scheme": "url"
     },
     {
       "identifier": "10.1016/j.matt.2023.02.014",
       "relation": "references",
       "resource_type": "publication-article",
       "scheme": "doi"
-    },
-    {
-      "identifier": "10.5281/zenodo.23720668",
-      "relation": "references",
-      "resource_type": "software",
-      "scheme": "doi"
-    },
-    {
-      "identifier": "10.5281/zenodo.23721460",
-      "relation": "references",
-      "resource_type": "software",
-      "scheme": "doi"
-    },
-    {
-      "identifier": "https://github.com/edgar-castillo-sci/Laminar",
-      "relation": "isSupplementTo",
-      "resource_type": "software",
-      "scheme": "url"
     }
   ]
 }

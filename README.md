@@ -6,7 +6,7 @@ A Rust workspace for the exact enumeration, canonicalization, classification, an
 JAM is the notation; honeycomb is the symmetry module. Laminar uses JAM as its default notation and honeycomb as its default (and, in v0.1, only) symmetry module.
 
 - Version: `0.1.0-alpha.5`
-- License: MIT OR Apache-2.0
+- License: AGPL-3.0-or-later
 - Zenodo: [10.5281/zenodo.23753545](https://doi.org/10.5281/zenodo.23753545) (concept: [10.5281/zenodo.23628779](https://doi.org/10.5281/zenodo.23628779))
 
 ## Scope
@@ -167,4 +167,4 @@ Theoretical foundation: companion manuscripts in preparation. Links will be adde
 
 ## License and governance
 
-Dual-licensed under MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`). Founder-led project (`GOVERNANCE.md`); the name "Laminar" is a trademark (`TRADEMARK.md`). Contributions under DCO (`CONTRIBUTING.md`).
+Dual-licensed under AGPL-3.0-or-later (`LICENSE`). Founder-led project (`GOVERNANCE.md`); the name "Laminar" is a trademark (`TRADEMARK.md`). Contributions under DCO (`CONTRIBUTING.md`).
