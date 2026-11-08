@@ -5,9 +5,9 @@ A Rust workspace for the exact enumeration, canonicalization, classification, an
 
 JAM is the notation; honeycomb is the symmetry module. Laminar uses JAM as its default notation and honeycomb as its default (and, in v0.1, only) symmetry module.
 
-- Version: `0.1.0-alpha.5`
+- Version: `0.1.0`
 - License: AGPL-3.0-or-later
-- Zenodo: [10.5281/zenodo.23753545](https://doi.org/10.5281/zenodo.23753545) (concept: [10.5281/zenodo.23628779](https://doi.org/10.5281/zenodo.23628779))
+- Zenodo: [10.5281/zenodo.24064345](https://doi.org/10.5281/zenodo.24064345) (concept: [10.5281/zenodo.23628779](https://doi.org/10.5281/zenodo.23628779))
 
 ## Scope
 
@@ -157,8 +157,8 @@ Full history: [`spec/CHANGELOG.md`](spec/CHANGELOG.md).
 
 ```
 Castillo, E. (2026). Laminar: Infrastructure for laminar stacking
-(Version 0.1.0-alpha.5) [Computer software].
-https://doi.org/10.5281/zenodo.23753545
+(Version 0.1.0) [Computer software].
+https://doi.org/10.5281/zenodo.24064345
 ```
 
 The concept DOI (`10.5281/zenodo.23628779`) always points to the latest version. GitHub's "Cite this repository" button generates BibTeX from `CITATION.cff`.

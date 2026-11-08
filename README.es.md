@@ -7,7 +7,7 @@ JAM es la notación; honeycomb es el módulo de simetría. Laminar usa JAM como 
 
 - Versión: `0.1.0`
 - Licencia: AGPL-3.0-or-later
-- Zenodo: [10.5281/zenodo.23753545](https://doi.org/10.5281/zenodo.23753545) (concepto: [10.5281/zenodo.23628779](https://doi.org/10.5281/zenodo.23628779))
+- Zenodo: [10.5281/zenodo.24064345](https://doi.org/10.5281/zenodo.24064345) (concepto: [10.5281/zenodo.23628779](https://doi.org/10.5281/zenodo.23628779))
 
 ## Alcance
 
@@ -157,8 +157,8 @@ Historial completo: [`spec/CHANGELOG.md`](spec/CHANGELOG.md).
 
 ```
 Castillo, E. (2026). Laminar: Infrastructure for laminar stacking
-(Version 0.1.0-alpha.5) [Computer software].
-https://doi.org/10.5281/zenodo.23753545
+(Version 0.1.0) [Computer software].
+https://doi.org/10.5281/zenodo.24064345
 ```
 
 El DOI de concepto (`10.5281/zenodo.23628779`) apunta siempre a la última versión. El botón "Cite this repository" de GitHub genera BibTeX a partir de `CITATION.cff`.
